@@ -1,1 +1,1 @@
-"# smartspeaker_a4" 
+# smartspeaker_a4
