@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+C:/Users/moustapha/Projects/smartspeaker_a4/cmake-build-debug/CMakeFiles/bootloader
+C:/Users/moustapha/Projects/smartspeaker_a4/cmake-build-debug/CMakeFiles/bootloader.rule
+C:/Users/moustapha/Projects/smartspeaker_a4/cmake-build-debug/CMakeFiles/bootloader-complete.rule
+C:/Users/moustapha/Projects/smartspeaker_a4/cmake-build-debug/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+C:/Users/moustapha/Projects/smartspeaker_a4/cmake-build-debug/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+C:/Users/moustapha/Projects/smartspeaker_a4/cmake-build-debug/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+C:/Users/moustapha/Projects/smartspeaker_a4/cmake-build-debug/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+C:/Users/moustapha/Projects/smartspeaker_a4/cmake-build-debug/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+C:/Users/moustapha/Projects/smartspeaker_a4/cmake-build-debug/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+C:/Users/moustapha/Projects/smartspeaker_a4/cmake-build-debug/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule
