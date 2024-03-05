@@ -1,24 +1,37 @@
 #include "lcd.h"
 
+/**
+ * Static variable for PCF8574 I2C GPIO expander configuration.
+ * The PCF8574 is used to interface with the LCD display, allowing for
+ * data transmission over I2C, enabling the control of the LCD's digital inputs.
+ */
 static i2c_dev_t pcf8574;
 
-// Assigning an alias to SDA en SCL on the ESP_LyraT board are these SDA: 18 and SCL: 23
-// on the ESP-WROOM32 these are SDA: 33 and SCL: 32
-#define CONFIG_EXAMPLE_I2C_MASTER_SDA 18
-#define CONFIG_EXAMPLE_I2C_MASTER_SCL 23
-#define CONFIG_EXAMPLE_I2C_ADDR 0x27
-
-// Charsets for creating icons
+/**
+ * Bitmaps for LCD display icons, each icon consists of 8 rows to match LCD segment rows.
+ * - tuner: Icon for tuner.
+ * - internet_radio: Icon for internet radio.
+ * - sampler: Icon for sampler.
+ */
 const uint8_t tuner[] = {0b00000, 0b00100, 0b01110, 0b10101, 0b10101, 0b10101, 0b11111, 0b11111};
 const uint8_t internet_radio[] = {0b00000, 0b00110, 0b01001, 0b10001, 0b10101, 0b10001, 0b01001, 0b00110};
 const uint8_t sampler[] = {0b00000, 0b00100, 0b01010, 0b10101, 0b10001, 0b10001, 0b10001, 0b01110};
 
+/**
+ * Writes data to the LCD using the PCF8574 I2C GPIO expander.
+ * @param lcd Pointer to the LCD configuration structure.
+ * @param data Data to be written to the LCD.
+ * @return ESP_OK on success, or an error code on failure.
+ */
 static esp_err_t write_lcd_data(const hd44780_t *lcd, uint8_t data)
 {
     return pcf8574_port_write(&pcf8574, data);
 }
 
-// Initializing a simple menu
+/**
+ * Initializes and displays a simple menu on the LCD.
+ * @param pvParameters Pointer to task parameters (not used).
+ */
 void menu(void *pvParameters)
 {
     // LCD properties
@@ -35,55 +48,47 @@ void menu(void *pvParameters)
             .d7 = 7,
             .bl = 3}};
 
+    // Initialize PCF8574 I2C GPIO expander
     memset(&pcf8574, 0, sizeof(i2c_dev_t));
-    ESP_ERROR_CHECK(pcf8574_init_desc(&pcf8574, CONFIG_EXAMPLE_I2C_ADDR, 0, CONFIG_EXAMPLE_I2C_MASTER_SDA, CONFIG_EXAMPLE_I2C_MASTER_SCL));
+    ESP_ERROR_CHECK(pcf8574_init_desc(&pcf8574, LCD_I2C_ADDRESS, 0, LCD_I2C_MASTER_SDA, LCD_I2C_MASTER_SCL));
 
+    // Initialize LCD and enable backlight
     ESP_ERROR_CHECK(hd44780_init(&lcd));
-
     hd44780_switch_backlight(&lcd, true);
 
-    // Uploading the charsets so they can be used the 0,1,2 are the numbers assigned to them to call the specific charset
+    // Upload custom icons to LCD
     hd44780_upload_character(&lcd, 0, internet_radio);
     hd44780_upload_character(&lcd, 1, sampler);
     hd44780_upload_character(&lcd, 2, tuner);
 
-    // Clear LCD
+    // Clear LCD and display menu items
     hd44780_clear(&lcd);
+    write_and_upload_char(&lcd, 0, 0, 0, " Internet Radio");
+    write_and_upload_char(&lcd, 0, 1, 1, " Sampler");
+    write_and_upload_char(&lcd, 0, 2, 2, " Tuner");
 
-    // Writing something
-    write_and_upload_char(&lcd, 0, 0, " Internet Radio", 0);
-    write_and_upload_char(&lcd, 0, 1, " Sampler", 1);
-    write_and_upload_char(&lcd, 0, 2, " Tuner", 2);
-
+    // Keep task running
     while (1)
     {
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
-// Writes a string on the given postion
 void write_string_on_pos(const hd44780_t *lcd, int x, int y, const char *string)
 {
-    hd44780_gotoxy(lcd, x, y); // Setting cursor to designated area
-    hd44780_puts(lcd, string); // Writing the string
+    hd44780_gotoxy(lcd, x, y); // Move cursor to the specified coordinates
+    hd44780_puts(lcd, string); // Output the specified string
 }
 
-// Writes a char on the given postion
 void write_char_on_pos(const hd44780_t *lcd, int x, int y, char c)
 {
-    hd44780_gotoxy(lcd, x, y);
-    hd44780_puts(lcd, c);
+    hd44780_gotoxy(lcd, x, y); // Move cursor to the specified coordinates
+    hd44780_putc(lcd, c);      // Output the specified character
 }
 
-/**
- * Writes a first a char(icon) and afterwards a string on the given postion
- * EXAMPLE: write_and_upload_char(&lcd, 0,0," Internet Radio", 0);
- * this example writes first the char(icon) 0 and then the string "Internet Radio" the output on the LCD is like this 
- * Output: C Internet Radio
-*/
-void write_and_upload_char(const hd44780_t *lcd, int x, int y, const char *string, char c)
+void write_and_upload_char(const hd44780_t *lcd, int x, int y, char c, const char *string)
 {
-    hd44780_gotoxy(lcd, x, y);
-    hd44780_putc(lcd, c);
-    hd44780_puts(lcd, string);
+    hd44780_gotoxy(lcd, x, y); // Move cursor to the specified coordinates
+    hd44780_putc(lcd, c);      // Output the specified string
+    hd44780_puts(lcd, string); // Output the specified character
 }
