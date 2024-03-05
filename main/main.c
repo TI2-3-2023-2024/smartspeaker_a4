@@ -1,14 +1,8 @@
-#include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "lcd.h"
 
-
-void app_main(void)
+void app_main()
 {
-    int i = 0;
-    while (1) {
-        printf("[%d] Hello world!\n", i);
-        i++;
-        vTaskDelay(5* xPortGetTickRateHz());
-    }
+    ESP_ERROR_CHECK(i2cdev_init());
+    xTaskCreate(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 5, NULL);
 }
+
