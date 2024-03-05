@@ -15,7 +15,7 @@ static i2c_dev_t pcf8574;
  */
 const uint8_t tuner[] = {0b00000, 0b00100, 0b01110, 0b10101, 0b10101, 0b10101, 0b11111, 0b11111};
 const uint8_t internet_radio[] = {0b00000, 0b00110, 0b01001, 0b10001, 0b10101, 0b10001, 0b01001, 0b00110};
-const uint8_t sampler[] = {0b00000, 0b00100, 0b01010, 0b10101, 0b10001, 0b10001, 0b10001, 0b01110};
+const uint8_t sampler[] = {0b00000, 0b01000, 0b11000, 0b01000, 0b01110, 0b01111, 0b01110, 0b01100};
 
 /**
  * Writes data to the LCD using the PCF8574 I2C GPIO expander.
