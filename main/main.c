@@ -113,7 +113,7 @@ void app_main(void)
 
     strftime(strftime_buf, sizeof(strftime_buf), "%H:%M", &timeinfo);
     xTaskCreate(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 5, NULL);
-
+    
 }
 
 static void obtain_time(void)
