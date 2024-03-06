@@ -1,4 +1,5 @@
 #include "lcd.h"
+#include "string.h"
 
 static i2c_dev_t pcf8574;
 
@@ -43,21 +44,37 @@ void menu(void *pvParameters)
     hd44780_switch_backlight(&lcd, true);
 
     // Uploading the charsets so they can be used the 0,1,2 are the numbers assigned to them to call the specific charset
-    hd44780_upload_character(&lcd, 0, internet_radio);
-    hd44780_upload_character(&lcd, 1, sampler);
-    hd44780_upload_character(&lcd, 2, tuner);
+//    hd44780_upload_character(&lcd, 0, internet_radio);
+//    hd44780_upload_character(&lcd, 1, sampler);
+//    hd44780_upload_character(&lcd, 2, tuner);
 
     // Clear LCD
     hd44780_clear(&lcd);
 
+    time_t now;
+    struct tm timeinfo;
+    time(&now);
+    localtime_r(&now, &timeinfo);
+
+    char strftime_buf[6];
+
+    strftime(strftime_buf, sizeof(strftime_buf), "%H:%M", &timeinfo);
+
     // Writing something
-    write_and_upload_char(&lcd, 0, 0, " Internet Radio", 0);
-    write_and_upload_char(&lcd, 0, 1, " Sampler", 1);
-    write_and_upload_char(&lcd, 0, 2, " Tuner", 2);
+    write_string_on_pos(&lcd, 8, 1, strftime_buf);
+    ESP_LOGI("LCD PRINT", "print to screen");
+
 
     while (1)
     {
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        ESP_LOGI("TIMESYNC: ", "The time is: %s ", strftime_buf);
+        time(&now);
+        localtime_r(&now, &timeinfo);
+        strftime(strftime_buf, sizeof(strftime_buf), "%X", &timeinfo);
+
+        write_string_on_pos(&lcd, 7, 1, strftime_buf);
+
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 
@@ -72,7 +89,7 @@ void write_string_on_pos(const hd44780_t *lcd, int x, int y, const char *string)
 void write_char_on_pos(const hd44780_t *lcd, int x, int y, char c)
 {
     hd44780_gotoxy(lcd, x, y);
-    hd44780_puts(lcd, c);
+    hd44780_puts(lcd, (const char *) c);
 }
 
 /**
