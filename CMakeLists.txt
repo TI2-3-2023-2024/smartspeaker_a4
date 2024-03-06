@@ -2,6 +2,10 @@
 # CMakeLists in this exact order for cmake to work correctly
 cmake_minimum_required(VERSION 3.5)
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+
 set(EXTRA_COMPONENT_DIRS ../esp/external_libs/esp-idf-lib-v0.9.4/components)
+set(EXTRA_COMPONENT_DIRS $ENV{IDF_PATH}/components)
+set(EXTRA_COMPONENT_DIRS $ENV{ADF_PATH}/components)
+
 
 project(smartspeaker_a4)
