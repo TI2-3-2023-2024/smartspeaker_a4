@@ -46,8 +46,7 @@ void wifi_init()
 {
     // Initialize Wi-Fi, NVS, and network interface
     ESP_LOGI(TAG, "[ 1 ] Start and wait for Wi-Fi network");
-    esp_periph_config_t periph_cfg;
-    periph_cfg = DEFAULT_ESP_PERIPH_SET_CONFIG();
+    esp_periph_config_t periph_cfg = DEFAULT_ESP_PERIPH_SET_CONFIG();
     set = esp_periph_set_init(&periph_cfg);
     wifi_cfg.ssid = CONFIG_ESP_WIFI_SSID;
     wifi_cfg.password = CONFIG_ESP_WIFI_PASSWORD;

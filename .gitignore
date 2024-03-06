@@ -152,3 +152,6 @@ fabric.properties
 *.vsix
 sdkconfig
 sdkconfig
+sdkconfig
+dependencies.lock
+sdkconfig
