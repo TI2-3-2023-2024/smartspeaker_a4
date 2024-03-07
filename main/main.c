@@ -25,6 +25,7 @@
 #include "lcd.h"
 
 static const char *TAG = "example";
+volatile int state = 0;
 
 /* Variable holding number of times ESP32 restarted since first boot.
  * It is placed into RTC memory using RTC_DATA_ATTR and
@@ -111,7 +112,6 @@ void app_main(void)
 
     ESP_ERROR_CHECK(i2cdev_init());
 
-    strftime(strftime_buf, sizeof(strftime_buf), "%H:%M", &timeinfo);
     xTaskCreate(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 5, NULL);
 
 }
@@ -134,6 +134,10 @@ static void obtain_time(void)
      * Read "Establishing Wi-Fi or Ethernet Connection" section in
      * examples/protocols/README.md for more information about this function.
      */
+//    xTaskCreatePinnedToCore(connection_status, "status",configMINIMAL_STACK_SIZE * 5, 0, 0, NULL, 0);
+    ESP_LOGI("debug", "created first task");
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+
     ESP_ERROR_CHECK(example_connect());
 
     initialize_sntp();
@@ -146,11 +150,31 @@ static void obtain_time(void)
     while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count) {
         ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
         vTaskDelay(2000 / portTICK_PERIOD_MS);
+        state = 0;
     }
+
+    if (sntp_get_sync_status() != SNTP_SYNC_STATUS_COMPLETED) {
+        state = 1;
+
+        ESP_ERROR_CHECK(example_disconnect());
+
+//        xTaskCreatePinnedToCore(connection_status, "status",configMINIMAL_STACK_SIZE * 5, 1, 0, NULL, 0);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+
+        obtain_time();
+    }
+
     time(&now);
     localtime_r(&now, &timeinfo);
+    state = 3;
 
-    ESP_ERROR_CHECK( example_disconnect() );
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    ESP_ERROR_CHECK(example_disconnect() );
+
+//    xTaskCreatePinnedToCore(connection_status, "status",configMINIMAL_STACK_SIZE * 5, 3, 0, NULL, 0);
+
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
 }
 
 static void initialize_sntp(void)
