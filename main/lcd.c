@@ -56,12 +56,12 @@ void menu(void *pvParameters)
     time(&now);
     localtime_r(&now, &timeinfo);
 
-    char strftime_buf[6];
+    char strftime_buf[10];
 
-    strftime(strftime_buf, sizeof(strftime_buf), "%H:%M", &timeinfo);
+    strftime(strftime_buf, sizeof(strftime_buf), "%X", &timeinfo);
 
     // Writing something
-    write_string_on_pos(&lcd, 8, 1, strftime_buf);
+    write_string_on_pos(&lcd, 5, 1, strftime_buf);
     ESP_LOGI("LCD PRINT", "print to screen");
 
 
@@ -72,7 +72,7 @@ void menu(void *pvParameters)
         localtime_r(&now, &timeinfo);
         strftime(strftime_buf, sizeof(strftime_buf), "%X", &timeinfo);
 
-        write_string_on_pos(&lcd, 7, 1, strftime_buf);
+        write_string_on_pos(&lcd, 5, 1, strftime_buf);
 
         vTaskDelay(pdMS_TO_TICKS(100));
     }

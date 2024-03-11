@@ -120,12 +120,13 @@ void app_main(void)
             vTaskDelay(2000 / portTICK_PERIOD_MS);
         }
     }
-    xTaskCreatePinnedToCore(radio, "radio_test", configMINIMAL_STACK_SIZE*5, NULL, 1, NULL,0)
 
     ESP_ERROR_CHECK(i2cdev_init());
 
     strftime(strftime_buf, sizeof(strftime_buf), "%H:%M", &timeinfo);
-    xTaskCreatePinnedToCore(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 1, NULL, 1);
+    xTaskCreatePinnedToCore(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 5, NULL, 1);
+    
+    xTaskCreatePinnedToCore(radio, "radio_test", configMINIMAL_STACK_SIZE*5, NULL, 1, NULL,0);
 
 }
 
@@ -133,7 +134,7 @@ static void obtain_time(void)
 {
     ESP_ERROR_CHECK( nvs_flash_init() );
     ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK( esp_event_loop_create_default() );
+    ESP_ERROR_CHECK( esp_event_loop_create_default());
 
     /**
      * NTP server address could be aquired via DHCP,
@@ -163,7 +164,7 @@ static void obtain_time(void)
     time(&now);
     localtime_r(&now, &timeinfo);
 
-    ESP_ERROR_CHECK( example_disconnect() );
+    ESP_ERROR_CHECK( example_disconnect());
 }
 
 static void initialize_sntp(void)
@@ -183,8 +184,8 @@ void radio(){
     esp_periph_config_t periph_cfg = DEFAULT_ESP_PERIPH_SET_CONFIG();
     esp_periph_set_handle_t set = esp_periph_set_init(&periph_cfg);
     periph_wifi_cfg_t wifi_cfg = {
-        .ssid = CONFIG_WIFI_SSID,
-        .password = CONFIG_WIFI_PASSWORD,
+        .ssid = CONFIG_ESP_WIFI_SSID,
+        .password = CONFIG_ESP_WIFI_PASSWORD,
     };
 
     esp_err_t err = nvs_flash_init();
