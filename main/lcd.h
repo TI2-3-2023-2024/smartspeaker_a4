@@ -36,6 +36,14 @@
 // Method Declarations
 
 /**
+ * @brief Makes the necesseray configurations for the LCD uploads custom characters.
+ * 
+ * This function is setting up the configurations for the LCD module and uploads the custom 
+ * characters that are used for the menu. 
+*/
+void lcd_init();
+
+/**
  * @brief Task function to display the menu on the LCD.
  * 
  * This task function runs in the FreeRTOS environment to manage the menu
@@ -50,24 +58,22 @@ void menu(void *pvParameters);
  * 
  * This function writes a string at the specified (x, y) position on the LCD.
  * 
- * @param lcd Pointer to the hd44780_t LCD structure.
  * @param x X-coordinate position.
  * @param y Y-coordinate position.
  * @param string String to write on the LCD.
  */
-void write_string_on_pos(const hd44780_t *lcd, int x, int y, const char *string);
+void write_string_on_pos(int x, int y, const char *string);
 
 /**
  * @brief Writes a char at the specified position on the LCD.
  * 
  * This function writes a character at the specified (x, y) position on the LCD.
  * 
- * @param lcd Pointer to the hd44780_t LCD structure.
  * @param x X-coordinate position.
  * @param y Y-coordinate position.
  * @param c Character to write on the LCD.
  */
-void write_char_on_pos(const hd44780_t *lcd, int x, int y, char c);
+void write_char_on_pos(int x, int y, char c);
 
 /**
  * @brief Writes a character followed by a string at the specified position on the LCD.
@@ -75,7 +81,6 @@ void write_char_on_pos(const hd44780_t *lcd, int x, int y, char c);
  * This function writes a character followed by a string at the specified (x, y) position
  * on the LCD screen.
  * 
- * @param lcd Pointer to the hd44780_t LCD structure.
  * @param x X-coordinate position.
  * @param y Y-coordinate position.
  * @param c Character (icon) to write before the string.
@@ -85,4 +90,30 @@ void write_char_on_pos(const hd44780_t *lcd, int x, int y, char c);
  * This example writes the character 'C' followed by the string "Internet Radio".
  * The output on the LCD would be: C Internet Radio
  */
-void write_and_upload_char(const hd44780_t *lcd, int x, int y, char c,const char *string);
+void write_and_upload_char(int x, int y, char c,const char *string);
+
+/**
+ * @brief Clears the character at the specified position on the LCD.
+ * 
+ * This function clears a character at the specified (x, y) position on the LCD screen.
+ * 
+ * @param x X-coordinate position.
+ * @param y Y-coordinate position.
+ * 
+ */
+void clear_at_position(int x, int y);
+
+/**
+ * @brief Clears a line on the LCD.
+ * 
+ * This function clears a line at the specified line parameter.
+ * Line 0: Page Bar.
+ * Line 1: Internet Radio.
+ * Line 2: Sampler.
+ * Line 3: Tuner.
+ * all entries except 0,1,2 and 3 are dismissed.
+ * 
+ * @param line Specified line to clear
+ *
+ */
+void clear_line(int line);
