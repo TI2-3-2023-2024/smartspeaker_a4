@@ -36,7 +36,7 @@
 // Method Declarations
 
 /**
- * @brief Makes the necesseray configurations for the LCD uploads custom characters.
+ * @brief Makes the necesseray configurations for the LCD and uploads custom characters.
  * 
  * This function is setting up the configurations for the LCD module and uploads the custom 
  * characters that are used for the menu. 
