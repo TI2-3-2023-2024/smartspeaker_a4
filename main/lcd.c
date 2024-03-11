@@ -67,7 +67,6 @@ void menu(void *pvParameters)
 
     while (1)
     {
-        ESP_LOGI("TIMESYNC: ", "The time is: %s ", strftime_buf);
         time(&now);
         localtime_r(&now, &timeinfo);
         strftime(strftime_buf, sizeof(strftime_buf), "%X", &timeinfo);

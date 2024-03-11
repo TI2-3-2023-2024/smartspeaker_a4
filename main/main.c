@@ -124,9 +124,9 @@ void app_main(void)
     ESP_ERROR_CHECK(i2cdev_init());
 
     strftime(strftime_buf, sizeof(strftime_buf), "%H:%M", &timeinfo);
-    xTaskCreatePinnedToCore(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 5, NULL, 1);
+    xTaskCreate(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 1, NULL);
     
-    xTaskCreatePinnedToCore(radio, "radio_test", configMINIMAL_STACK_SIZE*5, NULL, 1, NULL,0);
+    xTaskCreate(radio, "radio_test", configMINIMAL_STACK_SIZE*5, NULL, 5, NULL);
 
 }
 
@@ -161,6 +161,14 @@ static void obtain_time(void)
         ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
         vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
+
+    if (sntp_get_sync_status() != SNTP_SYNC_STATUS_COMPLETED) {
+        ESP_LOGI(TAG, "Time sync failed. Retrying.....");
+        ESP_ERROR_CHECK(example_disconnect());
+        obtain_time();
+        return;
+    }
+
     time(&now);
     localtime_r(&now, &timeinfo);
 
