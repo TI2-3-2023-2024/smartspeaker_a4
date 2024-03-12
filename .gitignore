@@ -1,6 +1,9 @@
 # Prerequisites
 *.d
 
+# Environment variables
+.env
+
 # Object files
 *.o
 *.ko
@@ -51,7 +54,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 build/
-sdkconfig
 sdkconfig.old
 
 # JetBrains
@@ -148,3 +150,4 @@ fabric.properties
 
 # Built Visual Studio Code Extensions
 *.vsix
+sdkconfig
