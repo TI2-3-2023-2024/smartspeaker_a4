@@ -1,8 +1,17 @@
 #include <stdio.h>
 #include "radio.h"
 
+
+/**
+ * Task function to initialize the internet radio. 
+ * It initializes the audio pipeline,
+ * Connects to a server and streams MP3 from said server to play on the speaker.
+ * @param arg: string name of the TAG variable. 
+ * Must be void* and will be cast to const char*
+*/
 void init_radio(void* arg)
 {
+    /* Initialize wifi and connect to a wifi network. SSID and Password are in the Menuconfig */
     const char* TAG = (const char*)arg;
     ESP_LOGI(TAG, "[ 3 ] Start and wait for Wi-Fi network");
     esp_periph_config_t periph_cfg = DEFAULT_ESP_PERIPH_SET_CONFIG();
@@ -14,8 +23,8 @@ void init_radio(void* arg)
 
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES) {
-        // NVS partition was truncated and needs to be erased
-        // Retry nvs_flash_init
+        /* NVS partition was truncated and needs to be erased */
+        /* Retry nvs_flash_init */
         ESP_ERROR_CHECK(nvs_flash_erase());
         err = nvs_flash_init();
     }
@@ -27,7 +36,7 @@ void init_radio(void* arg)
     esp_periph_start(set, wifi_handle);
     periph_wifi_wait_for_connected(wifi_handle, portMAX_DELAY);
     
-
+    /* Start audio pipeline with a http stream and mp3 decoder. */
     audio_pipeline_handle_t pipeline;
     audio_element_handle_t http_stream_reader, i2s_stream_writer, mp3_decoder;
 
@@ -65,22 +74,22 @@ void init_radio(void* arg)
     const char *link_tag[3] = {"http", "mp3", "i2s"};
     audio_pipeline_link(pipeline, &link_tag[0], 3);
 
+    /* Uses one of the urls from the radio_streams array as source of stream. */
     ESP_LOGI(TAG, "[2.6] Set up  uri (http as http_stream, mp3 as mp3 decoder, and default output is i2s)");
     audio_element_set_uri(http_stream_reader, radio_streams[0]);
 
-
-    // Example of using an audio event -- START
-    ESP_LOGI(TAG, "[ 4 ] Set up  event listener");
+    /* Set up event listener for pipeline */
+    ESP_LOGI(TAG, "[ 3 ] Set up  event listener");
     audio_event_iface_cfg_t evt_cfg = AUDIO_EVENT_IFACE_DEFAULT_CFG();
     audio_event_iface_handle_t evt = audio_event_iface_init(&evt_cfg);
 
-    ESP_LOGI(TAG, "[4.1] Listening event from all elements of pipeline");
+    ESP_LOGI(TAG, "[3.1] Listening event from all elements of pipeline");
     audio_pipeline_set_listener(pipeline, evt);
 
-    ESP_LOGI(TAG, "[4.2] Listening event from peripherals");
+    ESP_LOGI(TAG, "[3.2] Listening event from peripherals");
     audio_event_iface_set_listener(esp_periph_set_get_event_iface(set), evt);
 
-    ESP_LOGI(TAG, "[ 5 ] Start audio_pipeline");
+    ESP_LOGI(TAG, "[ 4 ] Start audio_pipeline");
     audio_pipeline_run(pipeline);
 
     while (1) {
@@ -91,6 +100,7 @@ void init_radio(void* arg)
             continue;
         }
 
+        /* Receive a mp3 stream from the server and play it */
         if (msg.source_type == AUDIO_ELEMENT_TYPE_ELEMENT
             && msg.source == (void *) mp3_decoder
             && msg.cmd == AEL_MSG_CMD_REPORT_MUSIC_INFO) {
@@ -112,7 +122,6 @@ void init_radio(void* arg)
             break;
         }
     }
-    // Example of using an audio event -- END
 
     ESP_LOGI(TAG, "[ 6 ] Stop audio_pipeline");
     audio_pipeline_stop(pipeline);
