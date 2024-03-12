@@ -73,7 +73,7 @@ void create_recording(const char *string, int recording_length);
 void record_task(void *pvParameters);
 
 
-//Functie for checking the recorder status. // TODO;
+// Functie for checking the recorder status. // TODO;
 void recorder_status();
 // Function to start recording audio for speech recognition // TODO;
 void start_speech_recognition();
