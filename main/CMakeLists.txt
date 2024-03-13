@@ -1,6 +1,5 @@
 
-
-set(COMPONENT_SRCS "main.c" "lcd.c" "lcd.h")
-set(COMPONENT_ADD_INCLUDEDIRS .)
+set(COMPONENT_SRCS "radio.c" "main.c" "lcd.c")
+set(COMPONENT_ADD_INCLUDEDIRS "include/")
 
 register_component()

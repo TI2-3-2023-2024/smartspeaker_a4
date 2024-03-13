@@ -1,4 +1,5 @@
 #include "lcd.h"
+#include "string.h"
 
 /**
  * Static variable for PCF8574 I2C GPIO expander configuration.
