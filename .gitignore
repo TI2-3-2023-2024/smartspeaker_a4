@@ -15,6 +15,13 @@
 *.map
 *.exp
 
+# Managed components
+managed_components
+
+# sdkconfig
+sdkconfig
+sdkconfig.old
+
 # Precompiled Headers
 *.gch
 *.pch
