@@ -17,9 +17,14 @@ const char *hetIs = "het is.wav";
 const char *uur = "uur.wav";
 const char *invalidNumber = "bruh.wav";
 
-// Function to print the text representation of a number
-// Parameters:
-// - num: The number to be printed
+/**
+ * @brief Prints the text representation of a number based on its value.
+ *
+ * This function checks if the number is within a valid range and prints the corresponding
+ * audio file name for the number. It handles numbers up to 13 and base ten numbers up to 60.
+ *
+ * @param num The number to be printed.
+ */
 void print_filenames_based_on_num(int num) {
     // Check if the number is within the valid range
     if (num < MIN_NUM || num > MAX_NUM) {
@@ -43,9 +48,14 @@ void print_filenames_based_on_num(int num) {
     printf("%s ", baseTenNumberStrings[ten]); // Print the base ten number
 }
 
-// Function to print the full time in text
-// Parameters:
-// - timeinfo: Pointer to the struct tm containing the time information
+/**
+ * @brief Prints the full time in text format.
+ *
+ * This function prints the hour, minute, and second in text format using the audio files
+ * corresponding to each time component.
+ *
+ * @param timeinfo Pointer to the struct tm containing the time information.
+ */
 void print_full_time(struct tm *timeinfo) {
     printf("%s ", hetIs);
     print_filenames_based_on_num(timeinfo->tm_hour); // Print the hour
@@ -56,7 +66,15 @@ void print_full_time(struct tm *timeinfo) {
     printf("seconden");
 }
 
-
+/**
+ * @brief Returns an array of strings representing the audio files for a given number.
+ *
+ * This function allocates memory for an array of strings and fills it with the audio file names
+ * corresponding to the given number. It handles numbers up to 13 and base ten numbers up to 60.
+ *
+ * @param num The number for which the audio files are to be returned.
+ * @return A pointer to the array of strings.
+ */
 char **get_filenames_based_on_num(int num) {
     char **file_array = malloc(3 * sizeof(char *)); // Allocate memory for the array of strings
     if (file_array == NULL) {
@@ -93,6 +111,15 @@ char **get_filenames_based_on_num(int num) {
     return file_array;
 }
 
+/**
+ * @brief Returns an array of strings representing the audio files for the full time.
+ *
+ * This function combines the audio files for the hour, minute, and second into a single array
+ * of strings, formatted as "het is", hour, "uur", minute, "minuten", second, "seconden".
+ *
+ * @param timeinfo Pointer to the struct tm containing the time information.
+ * @return A pointer to the array of strings.
+ */
 char ** get_filenames_based_on_time(struct tm *timeinfo) {
     char **full_file_array = malloc(8 * sizeof(char *)); // Allocate memory for the array of strings
     // Sizeof 8, voor "het is", nummer van max 3, "uur", nummer van max 3.

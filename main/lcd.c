@@ -2,14 +2,16 @@
 #include "string.h"
 
 /**
- * Static variable for PCF8574 I2C GPIO expander configuration.
+ * @brief Static variable for PCF8574 I2C GPIO expander configuration.
+ *
  * The PCF8574 is used to interface with the LCD display, allowing for
  * data transmission over I2C, enabling the control of the LCD's digital inputs.
  */
 static i2c_dev_t pcf8574;
 
 /**
- * Bitmaps for LCD display icons, each icon consists of 8 rows to match LCD segment rows.
+ * @brief Bitmaps for LCD display icons, each icon consists of 8 rows to match LCD segment rows.
+ *
  * - tuner: Icon for tuner.
  * - internet_radio: Icon for internet radio.
  * - sampler: Icon for sampler.
@@ -27,7 +29,8 @@ const uint8_t arrow[] = {0b00000, 0b00100, 0b00010, 0b11111, 0b11111, 0b00010, 0
 const uint8_t empty[] = {0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000};
 
 /**
- * Writes data to the LCD using the PCF8574 I2C GPIO expander.
+ * @brief Writes data to the LCD using the PCF8574 I2C GPIO expander.
+ *
  * @param lcd Pointer to the LCD configuration structure.
  * @param data Data to be written to the LCD.
  * @return ESP_OK on success, or an error code on failure.
@@ -38,10 +41,13 @@ static esp_err_t write_lcd_data(const hd44780_t *lcd, uint8_t data)
 }
 
 /**
- * Variable for HD44780 I2C LCD configuration.
+ * @brief Variable for HD44780 I2C LCD configuration.
  */
 hd44780_t lcd;
 
+/**
+ * @brief Initializes the LCD display and uploads custom icons.
+ */
 void lcd_init()
 {
     // LCD configuration
@@ -75,7 +81,8 @@ void lcd_init()
 }
 
 /**
- * Initializes and displays a simple menu on the LCD.
+ * @brief Initializes and displays a simple menu on the LCD.
+ *
  * @param pvParameters Pointer to task parameters (not used).
  */
 void menu(void *pvParameters)
@@ -88,12 +95,12 @@ void menu(void *pvParameters)
         write_char_on_pos(i, 0, 3);
     }
 
-    //Writing the lines
+    // Writing the lines
     write_and_upload_char(1, 1, 0, " Internet Radio");
     write_and_upload_char(1, 2, 1, " Sampler");
     write_and_upload_char(1, 3, 2, " Tuner");
 
-    //Arrow blinking
+    // Arrow blinking
     while (1)
     {
         write_char_on_pos(0, 1, 4);
@@ -103,18 +110,40 @@ void menu(void *pvParameters)
     }
 }
 
+/**
+ * @brief Writes a string to the LCD at specified position.
+ *
+ * @param x X-coordinate of the position.
+ * @param y Y-coordinate of the position.
+ * @param string The string to be written.
+ */
 void write_string_on_pos(int x, int y, const char *string)
 {
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_puts(&lcd, string); // Output the specified string
 }
 
+/**
+ * @brief Writes a character to the LCD at specified position.
+ *
+ * @param x X-coordinate of the position.
+ * @param y Y-coordinate of the position.
+ * @param c The character to be written.
+ */
 void write_char_on_pos(int x, int y, char c)
 {
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_putc(&lcd, c);      // Output the specified character
 }
 
+/**
+ * @brief Writes a character and a string to the LCD at specified position.
+ *
+ * @param x X-coordinate of the position.
+ * @param y Y-coordinate of the position.
+ * @param c The character to be written.
+ * @param string The string to be written.
+ */
 void write_and_upload_char(int x, int y, char c, const char *string)
 {
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
@@ -122,12 +151,23 @@ void write_and_upload_char(int x, int y, char c, const char *string)
     hd44780_puts(&lcd, string); // Output the specified character
 }
 
+/**
+ * @brief Clears a character at the specified position on the LCD.
+ *
+ * @param x X-coordinate of the position.
+ * @param y Y-coordinate of the position.
+ */
 void clear_at_position(int x, int y)
 {
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_putc(&lcd, 5);      // Output the specified string
 }
 
+/**
+ * @brief Clears a line on the LCD.
+ *
+ * @param line The line number to be cleared.
+ */
 void clear_line(int line)
 {
     if (line == 0 || line == 1 || line == 2 || line == 3)
@@ -135,9 +175,11 @@ void clear_line(int line)
         hd44780_gotoxy(&lcd, 0, line);
         for (int i = 0; i < 20; i++)
         {
-            clear_at_position(i,line);
+            clear_at_position(i, line);
         }
-    }else{
+    }
+    else
+    {
         printf("Specified line to clean incorrect!\n");
     }
 }
