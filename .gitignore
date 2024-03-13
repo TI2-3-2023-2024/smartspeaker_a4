@@ -4,6 +4,10 @@
 # Environment variables
 .env
 
+#Config files
+sdkconfig
+sdkconfig.old
+
 # Object files
 *.o
 *.ko
@@ -24,6 +28,8 @@
 *.a
 *.la
 *.lo
+managed_components/
+
 
 # Shared objects (inc. Windows DLLs)
 *.dll
