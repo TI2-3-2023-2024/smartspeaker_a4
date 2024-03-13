@@ -21,6 +21,7 @@
 *.a
 *.la
 *.lo
+managed_components/
 
 # Shared objects (inc. Windows DLLs)
 *.dll
@@ -148,3 +149,4 @@ fabric.properties
 
 # Built Visual Studio Code Extensions
 *.vsix
+dependencies.lock
