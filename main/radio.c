@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "radio.h"
 
-
+const static char* TAG = "RADIO";
 /**
  * Task function to initialize the internet radio. 
  * It initializes the audio pipeline,
@@ -12,7 +12,6 @@
 void init_radio(void* arg)
 {
     /* Initialize wifi and connect to a wifi network. SSID and Password are in the Menuconfig */
-    const char* TAG = (const char*)arg;
     ESP_LOGI(TAG, "[ 3 ] Start and wait for Wi-Fi network");
     esp_periph_config_t periph_cfg = DEFAULT_ESP_PERIPH_SET_CONFIG();
     esp_periph_set_handle_t set = esp_periph_set_init(&periph_cfg);
