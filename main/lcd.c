@@ -169,7 +169,7 @@ esp_err_t handle_touchpad_event(periph_service_event_t *evt, void *ctx)
             break;
         case INPUT_KEY_USER_ID_MODE:
             ESP_LOGW(TAG, "[ * ] [MODE-] input key event");
-            vol_down_handle();
+            mode_handle();
             break;
         case INPUT_KEY_USER_ID_REC:
             ESP_LOGW(TAG, "[ * ] [REC-] input key event");
@@ -236,6 +236,41 @@ void vol_down_handle()
 void mode_handle()
 {
     // open content on specific page
+    if (page_number == 0)
+    {
+        switch (current_position.y)
+        {
+        case 1:
+            hd44780_clear(&lcd);
+            write_string_on_pos(0,0,"Internet Radio");
+            
+            break;
+        case 2:
+            hd44780_clear(&lcd);
+            write_string_on_pos(0,0,"Sampler");
+            break;
+        case 3:
+            hd44780_clear(&lcd);
+            write_string_on_pos(0,0,"Tuner");
+            break;
+        }
+    }else{
+        switch (current_position.y)
+        {
+        case 1:
+            hd44780_clear(&lcd);
+            write_string_on_pos(0,0,"Recorder");
+            break;
+        case 2:
+            hd44780_clear(&lcd);
+            write_string_on_pos(0,0,"Audio Speaker");
+            break;
+        case 3:
+            hd44780_clear(&lcd);
+            write_string_on_pos(0,0,"Time");
+            break;
+        }
+    }
 }
 
 void write_string_on_pos(int x, int y, const char *string)
