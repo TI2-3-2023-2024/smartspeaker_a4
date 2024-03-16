@@ -26,7 +26,7 @@ void recorder_init(int sample_rate) {
     ESP_LOGI(TAG, "[ 1 ] Mount sdcard");
     esp_periph_config_t periph_cfg = DEFAULT_ESP_PERIPH_SET_CONFIG();
     set = esp_periph_set_init(&periph_cfg);
-
+    
     // Initialize SD Card peripheral
     audio_board_sdcard_init(set, SD_MODE_1_LINE);
 

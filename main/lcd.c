@@ -7,16 +7,16 @@
  */
 static i2c_dev_t pcf8574;
 
-int page_number;
 static const char *TAG = "LCD";
 
-typedef struct Point
+typedef struct Element_Position
 {
     int x;
     int y;
-} Point;
+} Element_Position;
 
-Point current_position;
+Element_Position element_position;
+Element_Position page_position;
 
 /**
  * Bitmaps for LCD display icons, each icon consists of 8 rows to match LCD segment rows.
@@ -84,7 +84,8 @@ void lcd_init()
     hd44780_upload_character(&lcd, 6, current_page);
 
     create_input_key_service();
-    page_number = 0;
+    page_position.x = 9;
+    page_position.y = 0;
 }
 
 void create_input_key_service()
@@ -126,7 +127,7 @@ void menu(void *pvParameters)
     write_and_upload_char(1, 2, 1, " Sampler");
     write_and_upload_char(1, 3, 2, " Tuner");
 
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 3; i++)
     {
         write_char_on_pos(i + 9, 0, 3);
     }
@@ -183,91 +184,155 @@ esp_err_t handle_touchpad_event(periph_service_event_t *evt, void *ctx)
 
 void play_button_handle()
 {
-    if (current_position.y != 3)
+    if (element_position.y != 3)
     {
-        clear_at_position(current_position.x, current_position.y);
-        current_position.y = current_position.y + 1;
-        write_char_on_pos(current_position.x, current_position.y, 4);
+        clear_at_position(element_position.x, element_position.y);
+        element_position.y += 1;
+        write_char_on_pos(element_position.x, element_position.y, 4);
     }
 }
 
 void set_button_handle()
 {
-    if (current_position.y != 1)
+    if (element_position.y != 1)
     {
-        clear_at_position(current_position.x, current_position.y);
-        current_position.y = current_position.y - 1;
-        write_char_on_pos(current_position.x, current_position.y, 4);
+        clear_at_position(element_position.x, element_position.y);
+        element_position.y -= 1;
+        write_char_on_pos(element_position.x, element_position.y, 4);
     }
 }
 
 void vol_up_handle()
 {
-    if (page_number != 1)
+    if (page_position.x != 11)
     {
-        printf("\n");
         hd44780_clear(&lcd);
         write_char_on_pos(9, 0, 3);
-        write_char_on_pos(10, 0, 6);
-        write_and_upload_char(1, 1, 0, " Recorder");
-        write_and_upload_char(1, 2, 1, " Audio Speaker");
-        write_and_upload_char(1, 3, 2, " Time");
+        write_char_on_pos(10, 0, 3);
+        write_char_on_pos(11, 0, 3);
+
+        page_position.x += 1;
+        write_char_on_pos(page_position.x, page_position.y, 6);
+        if (page_position.x == 9)
+        {
+            write_and_upload_char(1, 1, 0, " Internet Radio");
+            write_and_upload_char(1, 2, 1, " Sampler");
+            write_and_upload_char(1, 3, 2, " Tuner");
+        }
+        else if (page_position.x == 10)
+        {
+            write_and_upload_char(1, 1, 0, " Recorder");
+            write_and_upload_char(1, 2, 1, " Audio Speaker");
+            write_and_upload_char(1, 3, 2, " Time");
+        }
+        else if (page_position.x == 11)
+        {
+            write_and_upload_char(1, 1, 0, " Eren");
+            write_and_upload_char(1, 2, 1, " Matheus");
+            write_and_upload_char(1, 3, 2, " Moustapha");
+        }
+
         write_char_on_pos(0, 1, 4);
-        page_number += 1;
     }
 }
 
 void vol_down_handle()
 {
-    if (page_number != 0)
+    if (page_position.x != 9)
     {
-        printf("page 1 show contents of 1\n");
         hd44780_clear(&lcd);
+        write_char_on_pos(9, 0, 3);
         write_char_on_pos(10, 0, 3);
-        write_char_on_pos(9, 0, 6);
-        write_and_upload_char(1, 1, 0, " Internet Radio");
-        write_and_upload_char(1, 2, 1, " Sampler");
-        write_and_upload_char(1, 3, 2, " Tuner");
+        write_char_on_pos(11, 0, 3);
+
+        page_position.x -= 1;
+        write_char_on_pos(page_position.x, page_position.y, 6);
+        if (page_position.x == 9)
+        {
+            write_and_upload_char(1, 1, 0, " Internet Radio");
+            write_and_upload_char(1, 2, 1, " Sampler");
+            write_and_upload_char(1, 3, 2, " Tuner");
+        }
+        else if (page_position.x == 10)
+        {
+            write_and_upload_char(1, 1, 0, " Recorder");
+            write_and_upload_char(1, 2, 1, " Audio Speaker");
+            write_and_upload_char(1, 3, 2, " Time");
+        }
+        else if (page_position.x == 11)
+        {
+            write_and_upload_char(1, 1, 0, " Eren");
+            write_and_upload_char(1, 2, 1, " Matheus");
+            write_and_upload_char(1, 3, 2, " Moustapha");
+        }
+
         write_char_on_pos(0, 1, 4);
-        page_number -= 1;
     }
 }
 
 void mode_handle()
 {
     // open content on specific page
-    if (page_number == 0)
+    if (page_position.x == 9)
     {
-        switch (current_position.y)
+        switch (element_position.y)
         {
         case 1:
             hd44780_clear(&lcd);
-            write_string_on_pos(0,0,"Internet Radio");
-            
+            write_string_on_pos(0, 0, "Internet Radio");
+            write_char_on_pos(0, 1, 4);
             break;
         case 2:
             hd44780_clear(&lcd);
-            write_string_on_pos(0,0,"Sampler");
+            write_string_on_pos(0, 0, "Sampler");
+            write_char_on_pos(0, 1, 4);
             break;
         case 3:
             hd44780_clear(&lcd);
-            write_string_on_pos(0,0,"Tuner");
+            write_string_on_pos(0, 0, "Tuner");
+            write_char_on_pos(0, 1, 4);
             break;
         }
-    }else{
-        switch (current_position.y)
+    }
+    else if (page_position.x == 10)
+    {
+        switch (element_position.y)
         {
         case 1:
             hd44780_clear(&lcd);
-            write_string_on_pos(0,0,"Recorder");
+            write_string_on_pos(0, 0, "Recorder");
+            write_char_on_pos(0, 1, 4);
             break;
         case 2:
             hd44780_clear(&lcd);
-            write_string_on_pos(0,0,"Audio Speaker");
+            write_string_on_pos(0, 0, "Audio Speaker");
+            write_char_on_pos(0, 1, 4);
             break;
         case 3:
             hd44780_clear(&lcd);
-            write_string_on_pos(0,0,"Time");
+            write_string_on_pos(0, 0, "Time");
+            write_char_on_pos(0, 1, 4);
+            break;
+        }
+    }
+    else if(page_position.x == 11)
+    {
+        switch (element_position.y)
+        {
+        case 1:
+            hd44780_clear(&lcd);
+            write_string_on_pos(0, 0, "Eren");
+            write_char_on_pos(0, 1, 4);
+            break;
+        case 2:
+            hd44780_clear(&lcd);
+            write_string_on_pos(0, 0, "Matheus");
+            write_char_on_pos(0, 1, 4);
+            break;
+        case 3:
+            hd44780_clear(&lcd);
+            write_string_on_pos(0, 0, "Moustapha");
+            write_char_on_pos(0, 1, 4);
             break;
         }
     }
@@ -275,24 +340,24 @@ void mode_handle()
 
 void write_string_on_pos(int x, int y, const char *string)
 {
-    current_position.x = x;
-    current_position.y = y;
+    element_position.x = x;
+    element_position.y = y;
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_puts(&lcd, string); // Output the specified string
 }
 
 void write_char_on_pos(int x, int y, char c)
 {
-    current_position.x = x;
-    current_position.y = y;
+    element_position.x = x;
+    element_position.y = y;
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_putc(&lcd, c);      // Output the specified character
 }
 
 void write_and_upload_char(int x, int y, char c, const char *string)
 {
-    current_position.x = x;
-    current_position.y = y;
+    element_position.x = x;
+    element_position.y = y;
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_putc(&lcd, c);      // Output the specified string
     hd44780_puts(&lcd, string); // Output the specified character
@@ -300,16 +365,16 @@ void write_and_upload_char(int x, int y, char c, const char *string)
 
 void clear_at_position(int x, int y)
 {
-    current_position.x = x;
-    current_position.y = y;
+    element_position.x = x;
+    element_position.y = y;
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_putc(&lcd, 5);      // Output the specified string
 }
 
 void clear_line(int line)
 {
-    current_position.x = 0;
-    current_position.y = line;
+    element_position.x = 0;
+    element_position.y = line;
     if (line == 0 || line == 1 || line == 2 || line == 3)
     {
         hd44780_gotoxy(&lcd, 0, line);
