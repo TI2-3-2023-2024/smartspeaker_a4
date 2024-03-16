@@ -1,20 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_log.h"
-#include "sdkconfig.h"
-#include "audio_element.h"
-#include "audio_pipeline.h"
-#include "audio_event_iface.h"
-#include "audio_common.h"
-#include "board.h"
-#include "esp_peripherals.h"
-#include "periph_sdcard.h"
-#include "fatfs_stream.h"
-#include "i2s_stream.h"
-#include "wav_encoder.h"
-#include "audio_idf_version.h"
+#include "init.h"
 
 #ifndef RECORDER_H
 #define RECORDER_H
@@ -61,19 +45,7 @@ void stop_record();
  */
 void create_recording(const char *string, int recording_length);
 
-/**
- * @brief Task function for recording audio.
- * 
- * This function is responsible for recording audio. It should be executed 
- * in a FreeRTOS task. The function manages the recording process, including
- * setup, duration, and termination.
- * 
- * @param pvParameters Pointer to task parameters (not used in this function).
- */
-void record_task(void *pvParameters);
-
-
-// Functie for checking the recorder status. // TODO;
+//Functie for checking the recorder status. // TODO;
 void recorder_status();
 // Function to start recording audio for speech recognition // TODO;
 void start_speech_recognition();
