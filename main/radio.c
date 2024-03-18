@@ -16,35 +16,7 @@ const static char *TAG = "RADIO";
  */
 void init_radio(void *arg)
 {
-<<<<<<< HEAD
     /* Start audio pipeline with a http stream and mp3 decoder. */
-=======
-    // Initialization steps
-    ESP_LOGI(TAG, "[ 3 ] Start and wait for Wi-Fi network");
-    esp_periph_config_t periph_cfg = DEFAULT_ESP_PERIPH_SET_CONFIG();
-    esp_periph_set_handle_t set = esp_periph_set_init(&periph_cfg);
-    periph_wifi_cfg_t wifi_cfg = {
-        .ssid = CONFIG_ESP_WIFI_SSID,
-        .password = CONFIG_ESP_WIFI_PASSWORD,
-    };
-
-    // NVS initialization and error handling
-    esp_err_t err = nvs_flash_init();
-    if (err == ESP_ERR_NVS_NO_FREE_PAGES)
-    {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        err = nvs_flash_init();
-    }
-
-    ESP_ERROR_CHECK(esp_netif_init());
-
-    // Wi-Fi connection
-    esp_periph_handle_t wifi_handle = periph_wifi_init(&wifi_cfg);
-    esp_periph_start(set, wifi_handle);
-    periph_wifi_wait_for_connected(wifi_handle, portMAX_DELAY);
-
-    // Audio pipeline setup
->>>>>>> origin/dev
     audio_pipeline_handle_t pipeline;
     audio_element_handle_t http_stream_reader, i2s_stream_writer, mp3_decoder;
 
@@ -143,10 +115,6 @@ void init_radio(void *arg)
 
         audio_pipeline_remove_listener(pipeline);
 
-        /* Stop all peripherals before removing the listener */
-        esp_periph_set_stop_all(set);
-        audio_event_iface_remove_listener(esp_periph_set_get_event_iface(set), evt);
-
         /* Make sure audio_pipeline_remove_listener & audio_event_iface_remove_listener are called before destroying event_iface */
         audio_event_iface_destroy(evt);
 
@@ -155,9 +123,7 @@ void init_radio(void *arg)
         audio_element_deinit(http_stream_reader);
         audio_element_deinit(i2s_stream_writer);
         audio_element_deinit(mp3_decoder);
-        esp_periph_set_destroy(set);
     }
-<<<<<<< HEAD
 
     ESP_LOGI(TAG, "[ 6 ] Stop audio_pipeline");
     audio_pipeline_stop(pipeline);
@@ -182,6 +148,3 @@ void init_radio(void *arg)
     audio_element_deinit(mp3_decoder);
 
 }
-=======
-}
->>>>>>> origin/dev
