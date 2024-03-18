@@ -28,8 +28,8 @@ void app_main(void)
         time(&now);
     }
 
-    ESP_ERROR_CHECK(i2cdev_init());
-
+    // ESP_ERROR_CHECK(i2cdev_init());
+    app_init();
     xTaskCreate(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 1, NULL);
     
     xTaskCreate(init_radio, "radio_test", configMINIMAL_STACK_SIZE * 5, NULL, 5, NULL);

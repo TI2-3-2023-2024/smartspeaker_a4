@@ -1,17 +1,21 @@
+#include "sdcard_player.h"
 #include "lcd.h"
-#include "string.h"
+#include "recorder.h"
+#include "init.h"
+
+const char *TAG = "LCD";
+
+typedef struct Element_Position
+{
+    int x;
+    int y;
+} Element_Position;
+
+extern Element_Position element_position;
+extern Element_Position page_position;
 
 /**
- * @brief Static variable for PCF8574 I2C GPIO expander configuration.
- *
- * The PCF8574 is used to interface with the LCD display, allowing for
- * data transmission over I2C, enabling the control of the LCD's digital inputs.
- */
-static i2c_dev_t pcf8574;
-
-/**
- * @brief Bitmaps for LCD display icons, each icon consists of 8 rows to match LCD segment rows.
- *
+ * Bitmaps for LCD display icons, each icon consists of 8 rows to match LCD segment rows.
  * - tuner: Icon for tuner.
  * - internet_radio: Icon for internet radio.
  * - sampler: Icon for sampler.
@@ -29,47 +33,21 @@ const uint8_t arrow[] = {0b00000, 0b00100, 0b00010, 0b11111, 0b11111, 0b00010, 0
 const uint8_t empty[] = {0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000};
 
 /**
- * @brief Writes data to the LCD using the PCF8574 I2C GPIO expander.
- *
- * @param lcd Pointer to the LCD configuration structure.
- * @param data Data to be written to the LCD.
- * @return ESP_OK on success, or an error code on failure.
+ * Variable for HD44780 I2C LCD configuration.
  */
-static esp_err_t write_lcd_data(const hd44780_t *lcd, uint8_t data)
+extern hd44780_t lcd;
+
+esp_err_t touchpad_handle(periph_service_handle_t handle, periph_service_event_t *evt, void *ctx)
 {
-    return pcf8574_port_write(&pcf8574, data);
+    return lcd_touchpad_handle(evt, ctx);
 }
 
 /**
- * @brief Variable for HD44780 I2C LCD configuration.
+ * Initializes and displays a simple menu on the LCD.
+ * @param pvParameters Pointer to task parameters (not used).
  */
-hd44780_t lcd;
-
-/**
- * @brief Initializes the LCD display and uploads custom icons.
- */
-void lcd_init()
+void menu(void *pvParameters)
 {
-    // LCD configuration
-    lcd.write_cb = write_lcd_data; // use callback to send data to LCD by I2C GPIO expander
-    lcd.font = HD44780_FONT_5X8;
-    lcd.lines = 4;
-    lcd.pins.rs = 0;
-    lcd.pins.e = 2;
-    lcd.pins.d4 = 4;
-    lcd.pins.d5 = 5;
-    lcd.pins.d6 = 6;
-    lcd.pins.d7 = 7;
-    lcd.pins.bl = 3;
-
-    // Initialize PCF8574 I2C GPIO expander
-    memset(&pcf8574, 0, sizeof(i2c_dev_t));
-    ESP_ERROR_CHECK(pcf8574_init_desc(&pcf8574, LCD_I2C_ADDRESS, 0, LCD_I2C_MASTER_SDA, LCD_I2C_MASTER_SCL));
-
-    // Initialize LCD and enable backlight
-    ESP_ERROR_CHECK(hd44780_init(&lcd));
-    hd44780_switch_backlight(&lcd, true);
-
     // Upload custom icons to LCD
     hd44780_upload_character(&lcd, 0, internet_radio);
     hd44780_upload_character(&lcd, 1, sampler);
@@ -78,98 +56,338 @@ void lcd_init()
     hd44780_upload_character(&lcd, 4, arrow);
     hd44780_upload_character(&lcd, 5, empty);
     hd44780_upload_character(&lcd, 6, current_page);
-}
 
-/**
- * @brief Initializes and displays a simple menu on the LCD.
- *
- * @param pvParameters Pointer to task parameters (not used).
- */
-void menu(void *pvParameters)
-{
-    lcd_init();
-
-    // Page bar creating at the top
-    for (int i = 0; i < 20; i++)
-    {
-        write_char_on_pos(i, 0, 3);
-    }
-
+    page_position.x = 9;
+    page_position.y = 0;
     // Writing the lines
     write_and_upload_char(1, 1, 0, " Internet Radio");
     write_and_upload_char(1, 2, 1, " Sampler");
     write_and_upload_char(1, 3, 2, " Tuner");
 
-    // Arrow blinking
+    for (int i = 0; i < 3; i++)
+    {
+        write_char_on_pos(i + 9, 0, 3);
+    }
+    write_char_on_pos(9, 0, 6);
+
+    write_char_on_pos(0, 1, 4);
     while (1)
     {
-        write_char_on_pos(0, 1, 4);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        write_char_on_pos(0, 1, 5);
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
-/**
- * @brief Writes a string to the LCD at specified position.
- *
- * @param x X-coordinate of the position.
- * @param y Y-coordinate of the position.
- * @param string The string to be written.
- */
+bool audio_mode_toggle = false;
+
+// Handle touch pad events to control music playback and adjust volume
+esp_err_t lcd_touchpad_handle(periph_service_event_t *evt, void *ctx)
+{
+    if (!audio_mode_toggle)
+    {
+        printf("INSIDE LCD TOUCHPAD HANDLE!!\n");
+        if (evt->type == INPUT_KEY_SERVICE_ACTION_CLICK_RELEASE)
+        {
+            ESP_LOGW(TAG, "[ * ] input key id is %d", (int)evt->data);
+
+            switch ((int)evt->data)
+            {
+            case INPUT_KEY_USER_ID_PLAY:
+                ESP_LOGW(TAG, "[ * ] [Play] input key event");
+                play_button_handle();
+                break;
+            case INPUT_KEY_USER_ID_SET:
+                ESP_LOGW(TAG, "[ * ] [Set] input key event");
+                set_button_handle();
+                break;
+            case INPUT_KEY_USER_ID_VOLUP:
+                ESP_LOGW(TAG, "[ * ] [Vol+] input key event");
+                vol_up_handle();
+                break;
+            case INPUT_KEY_USER_ID_VOLDOWN:
+                ESP_LOGW(TAG, "[ * ] [Vol-] input key event");
+                vol_down_handle();
+                break;
+            case INPUT_KEY_USER_ID_MODE:
+                ESP_LOGW(TAG, "[ * ] [MODE-] input key event");
+                audio_mode_toggle = true;
+                mode_handle();
+                break;
+            case INPUT_KEY_USER_ID_REC:
+                ESP_LOGW(TAG, "[ * ] [REC-] input key event");
+                rec_handle();
+                break;
+            }
+        }
+    }
+    else
+    {
+        printf("INSIDE SDCARD TOUCHPAD HANDLE!!\n");
+        if (evt->type == INPUT_KEY_SERVICE_ACTION_CLICK_RELEASE)
+        {
+            ESP_LOGW(TAG, "[ * ] input key id is %d", (int)evt->data);
+
+            switch ((int)evt->data)
+            {
+            case INPUT_KEY_USER_ID_PLAY:
+                ESP_LOGW(TAG, "[ * ] [Play] input key event");
+                play_button_handle();
+                break;
+            case INPUT_KEY_USER_ID_SET:
+                ESP_LOGW(TAG, "[ * ] [Set] input key event");
+                set_button_handle();
+                break;
+            case INPUT_KEY_USER_ID_VOLUP:
+                ESP_LOGW(TAG, "[ * ] [Vol+] input key event");
+                vol_up_handle();
+                break;
+            case INPUT_KEY_USER_ID_VOLDOWN:
+                ESP_LOGW(TAG, "[ * ] [Vol-] input key event");
+                vol_down_handle();
+                break;
+            case INPUT_KEY_USER_ID_MODE:
+                ESP_LOGW(TAG, "[ * ] [MODE-] input key event");
+                mode_handle();
+                break;
+            case INPUT_KEY_USER_ID_REC:
+                ESP_LOGW(TAG, "[ * ] [REC-] input key event");
+                rec_handle();
+                break;
+            }
+        }
+    }
+
+    return ESP_OK;
+}
+
+void rec_handle()
+{
+    hd44780_clear(&lcd);
+    page_position.x = 9;
+    page_position.y = 0;
+    write_and_upload_char(1, 1, 0, " Internet Radio");
+    write_and_upload_char(1, 2, 1, " Sampler");
+    write_and_upload_char(1, 3, 2, " Tuner");
+
+    for (int i = 0; i < 3; i++)
+    {
+        write_char_on_pos(i + 9, 0, 3);
+    }
+    write_char_on_pos(9, 0, 6);
+
+    write_char_on_pos(0, 1, 4);
+
+    create_input_key_service();
+
+}
+
+void play_button_handle()
+{
+    if (element_position.y != 3)
+    {
+        clear_at_position(element_position.x, element_position.y);
+        element_position.y += 1;
+        write_char_on_pos(element_position.x, element_position.y, 4);
+    }
+}
+
+void set_button_handle()
+{
+    if (element_position.y != 1)
+    {
+        clear_at_position(element_position.x, element_position.y);
+        element_position.y -= 1;
+        write_char_on_pos(element_position.x, element_position.y, 4);
+    }
+}
+
+void vol_up_handle()
+{
+    if (page_position.x != 11)
+    {
+        hd44780_clear(&lcd);
+        write_char_on_pos(9, 0, 3);
+        write_char_on_pos(10, 0, 3);
+        write_char_on_pos(11, 0, 3);
+
+        page_position.x += 1;
+        write_char_on_pos(page_position.x, page_position.y, 6);
+        if (page_position.x == 9)
+        {
+            write_and_upload_char(1, 1, 0, " Internet Radio");
+            write_and_upload_char(1, 2, 1, " Sampler");
+            write_and_upload_char(1, 3, 2, " Tuner");
+        }
+        else if (page_position.x == 10)
+        {
+            write_and_upload_char(1, 1, 0, " Recorder");
+            write_and_upload_char(1, 2, 1, " Audio Speaker");
+            write_and_upload_char(1, 3, 2, " Time");
+        }
+        else if (page_position.x == 11)
+        {
+            write_and_upload_char(1, 1, 0, " Eren");
+            write_and_upload_char(1, 2, 1, " Matheus");
+            write_and_upload_char(1, 3, 2, " Moustapha");
+        }
+
+        write_char_on_pos(0, 1, 4);
+    }
+}
+
+void vol_down_handle()
+{
+    if (page_position.x != 9)
+    {
+        hd44780_clear(&lcd);
+        write_char_on_pos(9, 0, 3);
+        write_char_on_pos(10, 0, 3);
+        write_char_on_pos(11, 0, 3);
+
+        page_position.x -= 1;
+        write_char_on_pos(page_position.x, page_position.y, 6);
+        if (page_position.x == 9)
+        {
+            write_and_upload_char(1, 1, 0, " Internet Radio");
+            write_and_upload_char(1, 2, 1, " Sampler");
+            write_and_upload_char(1, 3, 2, " Tuner");
+        }
+        else if (page_position.x == 10)
+        {
+            write_and_upload_char(1, 1, 0, " Recorder");
+            write_and_upload_char(1, 2, 1, " Audio Speaker");
+            write_and_upload_char(1, 3, 2, " Time");
+        }
+        else if (page_position.x == 11)
+        {
+            write_and_upload_char(1, 1, 0, " Eren");
+            write_and_upload_char(1, 2, 1, " Matheus");
+            write_and_upload_char(1, 3, 2, " Moustapha");
+        }
+
+        write_char_on_pos(0, 1, 4);
+    }
+}
+
+extern bool codec_config;
+
+void mode_handle()
+{
+    // open content on specific page
+    if (page_position.x == 9)
+    {
+        switch (element_position.y)
+        {
+        case 1:
+            hd44780_clear(&lcd);
+            write_string_on_pos(0, 0, "Internet Radio");
+            write_char_on_pos(0, 1, 4);
+            break;
+        case 2:
+            hd44780_clear(&lcd);
+            write_string_on_pos(0, 0, "Sampler");
+            write_char_on_pos(0, 1, 4);
+            break;
+        case 3:
+            hd44780_clear(&lcd);
+            write_string_on_pos(0, 0, "Tuner");
+            write_char_on_pos(0, 1, 4);
+            break;
+        }
+    }
+    else if (page_position.x == 10)
+    {
+        switch (element_position.y)
+        {
+        case 1:
+            app_init();
+            hd44780_clear(&lcd);
+            write_string_on_pos(0, 0, "Recorder");
+            write_char_on_pos(0, 1, 4);
+
+            codec_config = false; // false so recorder get initialized
+            create_audio_elements();
+            audio_mode_toggle = false;
+            create_recording("eren.wav", 6);
+            write_string_on_pos(2, 1, "Recording Finished");
+            break;
+        case 2:
+            app_init();
+            hd44780_clear(&lcd);
+            write_string_on_pos(0, 0, "Audio Speaker");
+            codec_config = true;
+            audio_mode_toggle = true;
+            create_audio_elements();
+            play_sound_by_filename("eren");
+            audio_mode_toggle = false;
+            write_char_on_pos(0, 1, 4);
+            break;
+        case 3:
+            hd44780_clear(&lcd);
+            write_string_on_pos(0, 0, "Time");
+            write_char_on_pos(0, 1, 4);
+            break;
+        }
+    }
+    else if (page_position.x == 11)
+    {
+        switch (element_position.y)
+        {
+        case 1:
+            hd44780_clear(&lcd);
+            write_string_on_pos(0, 0, "Eren");
+            write_char_on_pos(0, 1, 4);
+            break;
+        case 2:
+            hd44780_clear(&lcd);
+            write_string_on_pos(0, 0, "Matheus");
+            write_char_on_pos(0, 1, 4);
+            break;
+        case 3:
+            hd44780_clear(&lcd);
+            write_string_on_pos(0, 0, "Moustapha");
+            write_char_on_pos(0, 1, 4);
+            break;
+        }
+    }
+}
+
 void write_string_on_pos(int x, int y, const char *string)
 {
+    element_position.x = x;
+    element_position.y = y;
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_puts(&lcd, string); // Output the specified string
 }
 
-/**
- * @brief Writes a character to the LCD at specified position.
- *
- * @param x X-coordinate of the position.
- * @param y Y-coordinate of the position.
- * @param c The character to be written.
- */
 void write_char_on_pos(int x, int y, char c)
 {
+    element_position.x = x;
+    element_position.y = y;
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_putc(&lcd, c);      // Output the specified character
 }
 
-/**
- * @brief Writes a character and a string to the LCD at specified position.
- *
- * @param x X-coordinate of the position.
- * @param y Y-coordinate of the position.
- * @param c The character to be written.
- * @param string The string to be written.
- */
 void write_and_upload_char(int x, int y, char c, const char *string)
 {
+    element_position.x = x;
+    element_position.y = y;
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_putc(&lcd, c);      // Output the specified string
     hd44780_puts(&lcd, string); // Output the specified character
 }
 
-/**
- * @brief Clears a character at the specified position on the LCD.
- *
- * @param x X-coordinate of the position.
- * @param y Y-coordinate of the position.
- */
 void clear_at_position(int x, int y)
 {
+    element_position.x = x;
+    element_position.y = y;
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_putc(&lcd, 5);      // Output the specified string
 }
 
-/**
- * @brief Clears a line on the LCD.
- *
- * @param line The line number to be cleared.
- */
 void clear_line(int line)
 {
+    element_position.x = 0;
+    element_position.y = line;
     if (line == 0 || line == 1 || line == 2 || line == 3)
     {
         hd44780_gotoxy(&lcd, 0, line);
