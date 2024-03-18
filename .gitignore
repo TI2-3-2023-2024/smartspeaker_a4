@@ -4,6 +4,10 @@
 # Environment variables
 .env
 
+#Config files
+sdkconfig
+sdkconfig.old
+
 # Object files
 *.o
 *.ko
@@ -21,6 +25,7 @@ managed_components
 # sdkconfig
 sdkconfig
 sdkconfig.old
+dependencies.lock
 
 # Precompiled Headers
 *.gch
@@ -31,6 +36,8 @@ sdkconfig.old
 *.a
 *.la
 *.lo
+managed_components/
+
 
 # Shared objects (inc. Windows DLLs)
 *.dll
@@ -157,4 +164,6 @@ fabric.properties
 
 # Built Visual Studio Code Extensions
 *.vsix
+sdkconfig
+dependencies.lock
 sdkconfig

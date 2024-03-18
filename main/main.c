@@ -16,6 +16,7 @@
 #include "esp_http_client.h"
 #include "custom_wifi.h"
 #include "weer.h"
+#include "frequency_detect.h"
 
 static const char* TAG = "MAIN";
 
@@ -61,5 +62,7 @@ void app_main(void)
     xTaskCreate(init_radio, "radio_test", configMINIMAL_STACK_SIZE * 5, (void*)&wifi_config, 5, NULL);
 
     free(output_buffer);
+
+    // xTaskCreate(init_radio, "radio_test", configMINIMAL_STACK_SIZE * 5, NULL, 5, NULL);
 
 }

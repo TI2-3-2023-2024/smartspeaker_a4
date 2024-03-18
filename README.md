@@ -4,6 +4,11 @@
 
 This project implements a simple menu system for an LCD display using an ESP32_LyraT developement board. It allows for displaying a page bar at the top and below that 3 menu options on an LCD screen.
 
+
+## Overview Frequency detection
+This project includes a module which utilizes the microphones on an ESP32_LyraT development board. Using the Goertzel filter algorithm it can detect specific frequencies in audio input. It features detection of multiple target frequencies simultaneously and a timeout mechanism for limiting detection duration.
+
+
 ## Prerequisites
 Before you begin, ensure you have met the following requirements:
 

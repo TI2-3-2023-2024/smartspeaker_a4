@@ -1,4 +1,6 @@
 #pragma once
+
+// Include necessary libraries
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -22,10 +24,19 @@
 
 #include "esp_netif.h"
 
-//radio kanalen kunnen toegevoegd worden.
+// Define radio stream URLs
 static const char* radio_streams[3] = {
     "https://www.mp3streams.nl/zender/radio-538/stream/4-mp3-128", 
     "https://www.mp3streams.nl/zender/qmusic-non-stop/stream/125-mp3-96", 
     "https://www.mp3streams.nl/zender/concertzender-klassiek/stream/110-mp3-128"};
 
+/**
+ * @brief Initializes the radio streaming functionality.
+ *
+ * This function sets up the necessary components for streaming radio content.
+ * It prepares the audio pipeline, configures the Wi-Fi connection, and sets up
+ * the audio output to the I2S interface.
+ *
+ * @param arg Optional argument for passing additional initialization parameters.
+ */
 void init_radio(void* arg);
