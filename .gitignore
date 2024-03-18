@@ -19,6 +19,14 @@ sdkconfig.old
 *.map
 *.exp
 
+# Managed components
+managed_components
+
+# sdkconfig
+sdkconfig
+sdkconfig.old
+dependencies.lock
+
 # Precompiled Headers
 *.gch
 *.pch
@@ -156,4 +164,6 @@ fabric.properties
 
 # Built Visual Studio Code Extensions
 *.vsix
+sdkconfig
+dependencies.lock
 sdkconfig
