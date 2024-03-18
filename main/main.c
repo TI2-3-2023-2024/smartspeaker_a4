@@ -11,6 +11,7 @@
 #include "lcd.h"
 #include "radio.h"
 #include "timesync.h"
+#include "frequency_detect.h"
 
 static const char* TAG = "MAIN";
 
@@ -23,7 +24,7 @@ void app_main(void)
     // Is time set? If not, tm_year will be (1970 - 1900).
     if (timeinfo.tm_year < (2016 - 1900)) {
         ESP_LOGI(TAG, "Time is not set yet. Connecting to WiFi and getting time over NTP.");
-        obtain_time();
+        // obtain_time();
         // update 'now' variable with current time
         time(&now);
     }
@@ -31,7 +32,8 @@ void app_main(void)
     ESP_ERROR_CHECK(i2cdev_init());
 
     xTaskCreate(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 1, NULL);
-    
-    xTaskCreate(init_radio, "radio_test", configMINIMAL_STACK_SIZE * 5, NULL, 5, NULL);
+    xTaskCreate(frequency_detection_task, "Tone_test", configMINIMAL_STACK_SIZE * 5,  NULL, 1, NULL);
+
+    // xTaskCreate(init_radio, "radio_test", configMINIMAL_STACK_SIZE * 5, NULL, 5, NULL);
 
 }
