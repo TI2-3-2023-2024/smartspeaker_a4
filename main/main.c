@@ -15,16 +15,16 @@
 #include "sdcard_player.h"
 #include "esp_http_client.h"
 #include "custom_wifi.h"
+#include "weer.h"
 
 static const char* TAG = "MAIN";
-
-#define MAX_HTTP_OUTPUT_BUFFER 2048
 
 void app_main(void)
 {
     time_t now;
     struct tm timeinfo;
     custom_wifi_config wifi_config = {0};
+    weer_info weer;
     time(&now);
     localtime_r(&now, &timeinfo);
     // Is time set? If not, tm_year will be (1970 - 1900).
@@ -40,36 +40,13 @@ void app_main(void)
     // it is used by functions like strlen(). The buffer should only be used upto size MAX_HTTP_OUTPUT_BUFFER
     init_wifi_nvs(&wifi_config);
     connect_wifi(&wifi_config);
-    char* output_buffer = (char*)calloc(MAX_HTTP_OUTPUT_BUFFER+1,sizeof(char));   // Buffer to store response of http request
-    int content_length = 0;
-    esp_http_client_config_t config = {
-        .url = "https://weerlive.nl/api/weerlive_api_v2.php?key=4b78afd2d0&locatie=Breda",
-    };
-    esp_http_client_handle_t client = esp_http_client_init(&config);
 
-    // GET Request
-    esp_http_client_set_method(client, HTTP_METHOD_GET);
-    esp_err_t err = esp_http_client_open(client, 0);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
-    } else {
-        content_length = esp_http_client_fetch_headers(client);
-        if (content_length < 0) {
-            ESP_LOGE(TAG, "HTTP client fetch headers failed");
-        } else {
-            int data_read = esp_http_client_read_response(client, output_buffer, MAX_HTTP_OUTPUT_BUFFER);
-            if (data_read >= 0) {
-                // ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %"PRId64,
-                // esp_http_client_get_status_code(client),
-                // esp_http_client_get_content_length(client));
-                // ESP_LOG_BUFFER_HEX(TAG, output_buffer, data_read);
-            } else {
-                ESP_LOGE(TAG, "Failed to read response");
-            }
-        }
-    }
-    esp_http_client_close(client);
-    printf("%s", output_buffer);
+    char* output_buffer = (char*)calloc(MAX_HTTP_OUTPUT_BUFFER+1, sizeof(char));   // Buffer to store response of http request
+    RequestWeather(weer.location, &weer.temperature, output_buffer);
+
+    
+    printf("%s", weer.location);
+    printf("%f", weer.temperature);
 
     ESP_ERROR_CHECK(i2cdev_init());
 
