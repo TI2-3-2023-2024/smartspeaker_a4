@@ -23,6 +23,6 @@ void print_filenames_based_on_num(int num);
 void print_full_time(struct tm *timeinfo);
 
 char ** get_filenames_based_on_num(int num);
-char ** get_filenames_based_on_time(struct tm *timeinfo);
+void get_filenames_based_on_time(char** time, struct tm *timeinfo);
 
 #endif //PLAYLIST_ATTEMPT_PLAYLIST_H

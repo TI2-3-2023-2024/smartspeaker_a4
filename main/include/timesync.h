@@ -13,6 +13,7 @@
 #include "radio.h"
 #include "sdkconfig.h"
 #include "protocol_examples_common.h"
+#include "custom_wifi.h"
 
 /**
  * @brief Callback function for time synchronization notification.
@@ -28,7 +29,7 @@ void time_sync_notification_cb(struct timeval *tv);
  *
  * This function initiates the process to obtain the current time from the SNTP server.
  */
-void obtain_time(void);
+void obtain_time(custom_wifi_config* config);
 
 /**
  * @brief Initializes the SNTP client.

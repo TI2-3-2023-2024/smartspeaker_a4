@@ -52,7 +52,8 @@ void setup_sdcard_playlist()
 {
     ESP_LOGW(TAG, "[1.2] Set up a sdcard playlist and scan sdcard music save to it");
     sdcard_list_create(&sdcard_list_handle);
-    sdcard_scan(sdcard_url_save_cb, "/sdcard", 0, (const char *[]){"wav"}, 1, sdcard_list_handle);
+    sdcard_list_save(&sdcard_list_handle, "sdcard/");
+    //sdcard_scan(sdcard_url_save_cb, "/sdcard", 0, (const char *[]){"wav"}, 1, sdcard_list_handle);
     sdcard_list_show(sdcard_list_handle);
 }
 
@@ -133,8 +134,7 @@ void set_up_event_listener()
     audio_pipeline_set_listener(pipeline, evt);
 }
 
-void sdcard_player_start()
-{
+void sdcard_player_start(){
     while (1)
     {
         /* Handle event interface messages from pipeline
@@ -346,7 +346,7 @@ void play_sound(const char *sound_file) {
     
     // Set the URI to the sound file on the SD card
     char uri[15];
-    snprintf(uri, 15, "/sdcard/%s", sound_file);
+    snprintf(uri, 15, "/sdcard/NL%s", sound_file);
     audio_element_set_uri(fatfs_stream_reader, uri);
     
     // Reset the pipeline and run it to play the sound

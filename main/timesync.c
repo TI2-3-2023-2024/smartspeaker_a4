@@ -22,20 +22,12 @@ void time_sync_notification_cb(struct timeval *tv)
  * address via DHCP. It then connects to the network, initializes SNTP, and waits for the system time to be set.
  * Finally, it disconnects from the network.
  */
-void obtain_time(void)
+void obtain_time(custom_wifi_config* config)
 {
-    // Initialization steps
-    ESP_ERROR_CHECK( nvs_flash_init() );
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK( esp_event_loop_create_default());
-
-    // Optional: Configure NTP server address via DHCP
-#if LWIP_DHCP_GET_NTP_SRV
-    esp_sntp_servermode_dhcp(1);      // accept NTP offers from DHCP server, if any
-#endif
-
+    init_wifi_nvs(config);
+    
     // Connect to network
-    ESP_ERROR_CHECK(example_connect());
+    connect_wifi(config);
 
     // Initialize SNTP
     initialize_sntp();
@@ -55,7 +47,7 @@ void obtain_time(void)
     tzset();
 
     // Disconnect from network
-    ESP_ERROR_CHECK( example_disconnect());
+    disconnect_wifi(config);
 }
 
 /**

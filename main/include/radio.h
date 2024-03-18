@@ -18,6 +18,7 @@
 #include "esp_peripherals.h"
 #include "periph_wifi.h"
 #include "board.h"
+#include "custom_wifi.h"
 
 #include "esp_netif.h"
 

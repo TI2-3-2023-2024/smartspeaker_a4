@@ -3,19 +3,21 @@
 
 // Array of strings representing base numbers
 const char *baseNumberStrings[] = {
-        "0.wav", "1.wav", "2.wav", "3.wav", "4.wav", "5.wav", "6.wav",
-        "7.wav", "8.wav", "9.wav", "10.wav", "11.wav", "12.wav", "13.wav"
+        "0", "1", "2", "3", "4", "5", "6",
+        "7", "8", "9", "10", "11", "12", "13"
 };
 
 // Array of strings representing base ten numbers
 const char *baseTenNumberStrings[] = {
-        "10.wav", "20.wav", "30.wav", "40.wav", "50.wav", "60.wav"
+        "10", "20", "30", "40", "50", "60"
 };
 
-const char *en = "en.wav";
-const char *hetIs = "het is.wav";
-const char *uur = "uur.wav";
-const char *invalidNumber = "bruh.wav";
+const char *en = "en";
+const char *hetIs = "het is";
+const char *uur = "uur";
+const char *minuten = "minuten";
+const char * seconden = "seconden";
+const char *invalidNumber = "bruh";
 
 // Function to print the text representation of a number
 // Parameters:
@@ -93,32 +95,44 @@ char **get_filenames_based_on_num(int num) {
     return file_array;
 }
 
-char ** get_filenames_based_on_time(struct tm *timeinfo) {
-    char **full_file_array = malloc(8 * sizeof(char *)); // Allocate memory for the array of strings
-    // Sizeof 8, voor "het is", nummer van max 3, "uur", nummer van max 3.
-    if (full_file_array == NULL) {
+void get_filenames_based_on_time(char** time, struct tm *timeinfo) {
+    if (time == NULL) {
         // Handle memory allocation failure
         return NULL;
     }
 
     char **hour_filenames = get_filenames_based_on_num(timeinfo->tm_hour);
     char **min_filenames = get_filenames_based_on_num(timeinfo->tm_min);
+    char **seconden_filenames = get_filenames_based_on_num(timeinfo->tm_sec);
 
     int full_index = 0;
-    full_file_array[full_index++] = hetIs;
+    time[full_index++] = hetIs;
 
     int i = 0;
     while (hour_filenames[i] != NULL) { // Combine full_file_array and hour_filenames
-        full_file_array[full_index++] = hour_filenames[i++];
+        time[full_index++] = hour_filenames[i++];
     }
 
-    full_file_array[full_index++] = uur;
+    time[full_index++] = uur;
 
     i = 0;
     while (min_filenames[i] != NULL) { // Combine full_file_array and min_filenames
-        full_file_array[full_index++] = min_filenames[i++];
+        time[full_index++] = min_filenames[i++];
     }
-    full_file_array[full_index] = NULL; // Set NULL to indicate end of array
 
-    return full_file_array;
+    if(min_filenames != NULL){
+        time[full_index++] = minuten;
+    }
+
+    while (seconden[i] != NULL) { // Combine full_file_array and min_filenames
+        time[full_index++] = seconden[i++];
+    }
+
+    if(seconden != NULL){
+        time[full_index++] = seconden;
+    }
+
+    time[full_index] = NULL; // Set NULL to indicate end of array
+
+    return time;
 }
