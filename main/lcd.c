@@ -15,24 +15,6 @@ extern Element_Position element_position;
 extern Element_Position page_position;
 
 /**
- * Bitmaps for LCD display icons, each icon consists of 8 rows to match LCD segment rows.
- * - tuner: Icon for tuner.
- * - internet_radio: Icon for internet radio.
- * - sampler: Icon for sampler.
- * - menu_pages: Icon for page structure for the menu.
- * - current_page: Icon for page structure that shows the current selected page.
- * - arrow: Arrow icon to show the current option in the menu.
- * - empty: Icon to help clear on certain areas.
- */
-const uint8_t tuner[] = {0b00000, 0b00100, 0b01110, 0b10101, 0b10101, 0b10101, 0b11111, 0b11111};
-const uint8_t internet_radio[] = {0b00000, 0b00110, 0b01001, 0b10001, 0b10101, 0b10001, 0b01001, 0b00110};
-const uint8_t sampler[] = {0b00000, 0b01000, 0b11000, 0b01000, 0b01110, 0b01111, 0b01110, 0b01100};
-const uint8_t menu_pages[] = {0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b11111};
-const uint8_t current_page[] = {0b11111, 0b11111, 0b11111, 0b11111, 0b11111, 0b11111, 0b11111, 0b11111};
-const uint8_t arrow[] = {0b00000, 0b00100, 0b00010, 0b11111, 0b11111, 0b00010, 0b00100, 0b00000};
-const uint8_t empty[] = {0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000};
-
-/**
  * Variable for HD44780 I2C LCD configuration.
  */
 extern hd44780_t lcd;
@@ -48,6 +30,24 @@ esp_err_t touchpad_handle(periph_service_handle_t handle, periph_service_event_t
  */
 void menu(void *pvParameters)
 {
+    /**
+     * Bitmaps for LCD display icons, each icon consists of 8 rows to match LCD segment rows.
+     * - tuner: Icon for tuner.
+     * - internet_radio: Icon for internet radio.
+     * - sampler: Icon for sampler.
+     * - menu_pages: Icon for page structure for the menu.
+     * - current_page: Icon for page structure that shows the current selected page.
+     * - arrow: Arrow icon to show the current option in the menu.
+     * - empty: Icon to help clear on certain areas.
+     */
+    uint8_t tuner[] = {0b00000, 0b00100, 0b01110, 0b10101, 0b10101, 0b10101, 0b11111, 0b11111};
+    uint8_t internet_radio[] = {0b00000, 0b00110, 0b01001, 0b10001, 0b10101, 0b10001, 0b01001, 0b00110};
+    uint8_t sampler[] = {0b00000, 0b01000, 0b11000, 0b01000, 0b01110, 0b01111, 0b01110, 0b01100};
+    uint8_t menu_pages[] = {0b11111, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b11111};
+    uint8_t current_page[] = {0b11111, 0b11111, 0b11111, 0b11111, 0b11111, 0b11111, 0b11111, 0b11111};
+    uint8_t arrow[] = {0b00000, 0b00100, 0b00010, 0b11111, 0b11111, 0b00010, 0b00100, 0b00000};
+    uint8_t empty[] = {0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000, 0b00000};
+
     // Upload custom icons to LCD
     hd44780_upload_character(&lcd, 0, internet_radio);
     hd44780_upload_character(&lcd, 1, sampler);
@@ -59,6 +59,7 @@ void menu(void *pvParameters)
 
     page_position.x = 9;
     page_position.y = 0;
+
     // Writing the lines
     write_and_upload_char(1, 1, 0, " Internet Radio");
     write_and_upload_char(1, 2, 1, " Sampler");
@@ -71,6 +72,7 @@ void menu(void *pvParameters)
     write_char_on_pos(9, 0, 6);
 
     write_char_on_pos(0, 1, 4);
+
     while (1)
     {
         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -177,7 +179,6 @@ void rec_handle()
     write_char_on_pos(0, 1, 4);
 
     create_input_key_service();
-
 }
 
 void play_button_handle()
