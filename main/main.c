@@ -21,6 +21,7 @@
 
 static const char* TAG = "MAIN";
 struct tm timeinfo;
+weer_info weer;
 
 static void my_timer(void *pvParameters);
 static void my_alarm(void *pvParameters);
@@ -29,7 +30,6 @@ static void my_stopwatch(void *pvParameters);
 void app_main(void) {
     time_t now;
     custom_wifi_config wifi_config = {0};
-    weer_info weer;
     time(&now);
     localtime_r(&now, &timeinfo);
     // Is time set? If not, tm_year will be (1970 - 1900).
@@ -47,7 +47,7 @@ void app_main(void) {
     connect_wifi(&wifi_config);
 
     char* output_buffer = (char*)calloc(MAX_HTTP_OUTPUT_BUFFER+1, sizeof(char));   // Buffer to store response of http request
-    RequestWeather(weer.location, &weer.temperature, output_buffer);
+    RequestWeather(weer.location, weer.status, &weer.temperature, output_buffer);
         
     printf("%s", weer.location);
     printf("%f", weer.temperature);

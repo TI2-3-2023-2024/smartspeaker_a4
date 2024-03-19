@@ -3,10 +3,13 @@
 #include "lcd.h"
 #include "recorder.h"
 #include "playlist.h"
+#include "custom_wifi.h"
+#include "weer.h"
 
 const char *TAG = "LCD";
 
 extern struct tm timeinfo;
+extern weer_info weer;
 
 typedef struct Element_Position
 {
@@ -292,7 +295,17 @@ void mode_handle()
             break;
         case 3:
             hd44780_clear(&lcd);
+
+            char temperature[64];
+            char s_location[64];
+            char s_status[64];
+            sprintf(temperature, "Temperatuur: %dC", (int)weer.temperature);
+            snprintf(s_location, "Locatie: %s", weer.location);
+            snprintf(s_status, "Status: %s", weer.status);
             write_string_on_pos(0, 0, "Weer");
+            write_string_on_pos(0, 1, s_location); 
+            write_string_on_pos(0, 2, temperature);
+            write_string_on_pos(0, 3, s_status);
             break;
         }
     }
