@@ -18,6 +18,7 @@
 #include "custom_wifi.h"
 #include "weer.h"
 #include "frequency_detect.h"
+#include "rnd_prediction.h"
 
 static const char* TAG = "MAIN";
 struct tm timeinfo;
