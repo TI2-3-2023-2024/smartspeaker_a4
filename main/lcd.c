@@ -2,6 +2,15 @@
 #include "sdcard_player.h"
 #include "lcd.h"
 #include "recorder.h"
+#include "frequency_detect.h"
+
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)  \
+  ((byte) & 0x10 ? '1' : '0'), \
+  ((byte) & 0x08 ? '1' : '0'), \
+  ((byte) & 0x04 ? '1' : '0'), \
+  ((byte) & 0x02 ? '1' : '0'), \
+  ((byte) & 0x01 ? '1' : '0')
 
 const char *TAG = "LCD";
 
@@ -24,6 +33,59 @@ extern hd44780_t lcd;
 esp_err_t touchpad_handle(periph_service_handle_t handle, periph_service_event_t *evt, void *ctx)
 {
     return lcd_touchpad_handle(evt, ctx);
+}
+
+
+void display_percentage(int y, int percentage)
+{
+    const int amountOfDisplays = 20;
+    const char fullBlockID = 6;
+
+    int fullBlocks = percentage / 5;
+    int rest = percentage % 5;
+
+    char pattern = 0b11111;
+    pattern <<= (5 - rest);
+
+    uint8_t customPattern[] = {pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern};
+    char customPatternID = 7;
+    hd44780_upload_character(&lcd, customPatternID, customPattern);
+
+    for (int x = 0; x < amountOfDisplays; x++)
+    {
+        if (x < fullBlocks)
+            write_char_on_pos(x, y, fullBlockID);
+        else if (x == fullBlocks)
+            write_char_on_pos(x, y, customPatternID);
+        else
+            clear_at_position(x, y);
+    }
+}
+
+void updateVolume(VolumeMeter* volume, char value) {
+    if (value < 0)
+        value = 0;
+    else if (value > 100)
+        value = 100;
+
+    volume->firstBar -= 4;
+    volume->secondBar -= 2;
+
+    if (volume->firstBar > 200)
+        volume->firstBar = 0; // overflow
+    if (volume->secondBar > 200)
+        volume->secondBar = 0; // overflow
+
+    if (volume->firstBar < value)
+        volume->firstBar = value;
+    if (volume->secondBar < value)
+        volume->secondBar = value;
+}
+
+void displayVolume(VolumeMeter *v, int y) {
+
+    display_percentage(y, v->firstBar);
+    display_percentage(y + 1, v->secondBar);
 }
 
 /**
@@ -227,6 +289,7 @@ void vol_up_handle()
         else if (page_position.x == 11)
         {
             write_and_upload_char(1, 1, 0, " Voorspelling");
+            write_and_upload_char(1, 2, 0, " Frequency");
         }
 
         write_char_on_pos(0, 1, 4);
@@ -259,6 +322,7 @@ void vol_down_handle()
         else if (page_position.x == 11)
         {
             write_and_upload_char(1, 1, 0, " Voorspelling");
+            write_and_upload_char(1, 2, 0, " Frequency");
         }
 
         write_char_on_pos(0, 1, 4);
@@ -299,18 +363,18 @@ void mode_handle()
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Opname");
             create_recording_elements();
-            //audio_mode_toggle = false;
+            // audio_mode_toggle = false;
             create_recording("eren.wav", 6);
             write_string_on_pos(2, 1, "Opname af");
             break;
-        case 2: 
+        case 2:
             app_init();
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Audio Speler");
             audio_mode_toggle = true;
             create_audio_elements();
             const char *files2[] = {"eren.wav"};
-            sdcard_playlist(files2,1);
+            sdcard_playlist(files2, 1);
             audio_mode_toggle = false;
             break;
         case 3:
@@ -328,9 +392,22 @@ void mode_handle()
             write_string_on_pos(0, 0, "Voorspelling");
             break;
         case 2: // Empty page
+            app_init();
+            // ESP_LOGE("A", "CLEARING LCD");
             hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "");
-            write_char_on_pos(0, 1, 4);
+            // ESP_LOGE("A", "CREATING ALT RECORDING ELEMENTS");
+            // create_alt_recording_elements();
+            // ESP_LOGE("A", "WRITING TO LCD");
+            write_string_on_pos(0, 0, "Frequency");
+            // write_char_on_pos(0, 1, 4);
+            // ESP_LOGE("A", "STARTING GROETZEL");
+            // init_goertzel_detector();
+            // start_goertzel_detection();
+            // TaskHandle_t frequencyTaskHandle;
+            // xTaskCreate(frequency_detection_task, "FREQUENCY", configMINIMAL_STACK_SIZE * 5, NULL, 1, NULL);
+
+            frequency_detection_task(NULL);
+
             break;
         case 3: // Empty page
             hd44780_clear(&lcd);

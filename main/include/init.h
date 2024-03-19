@@ -42,6 +42,7 @@ void start_codec_chip();
 void create_input_key_service();
 void create_audio_pipeline();
 void create_audio_elements();
+void create_alt_recording_elements();
 void create_recording_elements();
 void set_up_event_listener();
 
