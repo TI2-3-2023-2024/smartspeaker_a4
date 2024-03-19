@@ -11,7 +11,9 @@ const char* SDCARD_PLAYER = "SDCARD_PLAYER";
 void sdcard_playlist(const char** filesArray, int arraySize)
 {
     int currentFile = 0;
-    play_next_file(filesArray[0]);
+    if(filesArray[0] != NULL){
+        play_next_file(filesArray[0]);
+    }
     while (1)
     {
         /* Handle event interface messages from pipeline
@@ -43,6 +45,10 @@ void sdcard_playlist(const char** filesArray, int arraySize)
                 audio_element_state_t el_state = audio_element_get_state(i2s_stream_writer);
                 if (el_state == AEL_STATE_FINISHED)
                 {
+                        if(filesArray[currentFile] == NULL){
+                            break;
+                        }
+                        
                         currentFile++;
                         if(currentFile >= arraySize){
                             break;

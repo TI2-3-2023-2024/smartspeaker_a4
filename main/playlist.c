@@ -75,15 +75,8 @@ void print_full_time(struct tm *timeinfo) {
  * corresponding to the given number. It handles numbers up to 13 and base ten numbers up to 60.
  *
  * @param num The number for which the audio files are to be returned.
- * @return A pointer to the array of strings.
  */
-char **get_filenames_based_on_num(int num) {
-    char **file_array = malloc(3 * sizeof(char *)); // Allocate memory for the array of strings
-    if (file_array == NULL) {
-        // Handle memory allocation failure
-        return NULL;
-    }
-
+void get_filenames_based_on_num(char** file_array, int num) {
     // Check if the number is within the valid range
     if (num < MIN_NUM || num > MAX_NUM) {
         // Set all elements to "invalid number"
@@ -123,8 +116,10 @@ char **get_filenames_based_on_num(int num) {
  * @param timeinfo Pointer to the struct tm containing the time information.
  */
 void get_filenames_based_on_time(char** time, struct tm *timeinfo) {
-    char **hour_filenames = get_filenames_based_on_num(timeinfo->tm_hour);
-    char **min_filenames = get_filenames_based_on_num(timeinfo->tm_min);
+    char *hour_filenames[3]; 
+    get_filenames_based_on_num(hour_filenames, timeinfo->tm_hour);
+    char **min_filenames[3];  
+    get_filenames_based_on_num(min_filenames, timeinfo->tm_min);
 
     int full_index = 0;
     time[full_index++] = hetIs;
