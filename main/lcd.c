@@ -2,8 +2,11 @@
 #include "sdcard_player.h"
 #include "lcd.h"
 #include "recorder.h"
+#include "playlist.h"
 
 const char *TAG = "LCD";
+
+extern struct tm timeinfo;
 
 typedef struct Element_Position
 {
@@ -280,9 +283,17 @@ void mode_handle()
             app_init();
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Tijd");
-            create_audio_elements();
-            const char *files[] = {"rec.wav"};
-            sdcard_playlist(files, 1);
+                time_t now;
+                time(&now);
+                localtime_r(&now, &timeinfo);
+
+                audio_mode_toggle = true;
+                create_audio_elements();
+                char* files[20];
+                print_full_time(&timeinfo);
+                get_filenames_based_on_time(files, &timeinfo);
+                sdcard_playlist(files, "NL/", 20);
+                audio_mode_toggle = false;
             break;
         case 3:
             hd44780_clear(&lcd);
@@ -310,7 +321,7 @@ void mode_handle()
             audio_mode_toggle = true;
             create_audio_elements();
             const char *files2[] = {"eren.wav"};
-            sdcard_playlist(files2,1);
+            sdcard_playlist(files2,"",1);
             audio_mode_toggle = false;
             break;
         case 3:
