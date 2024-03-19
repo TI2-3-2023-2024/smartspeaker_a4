@@ -283,12 +283,12 @@ void mode_handle()
             break;
         case 2:
             hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "Sampler");
+            write_string_on_pos(0, 0, "Tijd");
             write_char_on_pos(0, 1, 4);
             break;
         case 3:
             hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "Tuner");
+            write_string_on_pos(0, 0, "Weer");
             write_char_on_pos(0, 1, 4);
             break;
         }
@@ -300,17 +300,17 @@ void mode_handle()
         case 1:
             app_init();
             hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "Recorder");
+            write_string_on_pos(0, 0, "Opname");
             write_char_on_pos(0, 1, 4);
             create_audio_elements();
             audio_mode_toggle = false;
             create_recording("eren.wav", 6);
-            write_string_on_pos(2, 1, "Recording Finished");
+            write_string_on_pos(2, 1, "Opname af");
             break;
         case 2:
             app_init();
             hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "Audio Speaker");
+            write_string_on_pos(0, 0, "Audio Speler");
             audio_mode_toggle = true;
             create_audio_elements();
             // play_sound_by_filename("eren");
@@ -319,7 +319,7 @@ void mode_handle()
             break;
         case 3:
             hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "Time");
+            write_string_on_pos(0, 0, "Papagaai");
             write_char_on_pos(0, 1, 4);
             break;
         }
@@ -330,17 +330,17 @@ void mode_handle()
         {
         case 1:
             hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "Eren");
+            write_string_on_pos(0, 0, "Voorspelling");
             write_char_on_pos(0, 1, 4);
             break;
         case 2:
             hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "Matheus");
+            write_string_on_pos(0, 0, "");
             write_char_on_pos(0, 1, 4);
             break;
         case 3:
             hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "Moustapha");
+            write_string_on_pos(0, 0, "");
             write_char_on_pos(0, 1, 4);
             break;
         }
