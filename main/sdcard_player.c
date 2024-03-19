@@ -8,7 +8,7 @@ extern esp_periph_set_handle_t set;
 
 const char* SDCARD_PLAYER = "SDCARD_PLAYER";
 
-void sdcard_playlist(const char** filesArray, const char* path, int arraySize)
+void sdcard_playlist(char** filesArray, const char* path, int arraySize)
 {
     int currentFile = 0;
     if(filesArray[0] != NULL){
