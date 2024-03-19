@@ -7,6 +7,7 @@
 #include "esp_log.h"
 #include "esp_sntp.h"
 #include "sdkconfig.h"
+#include "math.h"
 
 #include "lcd.h"
 #include "radio.h"
@@ -21,8 +22,11 @@
 static const char* TAG = "MAIN";
 struct tm timeinfo;
 
-void app_main(void)
-{
+static void my_timer(void *pvParameters);
+static void my_alarm(void *pvParameters);
+static void my_stopwatch(void *pvParameters);
+
+void app_main(void) {
     time_t now;
     custom_wifi_config wifi_config = {0};
     weer_info weer;
@@ -56,6 +60,9 @@ void app_main(void)
 
     free(output_buffer);
 
+    //xTaskCreatePinnedToCore(init_radio, "radio_test", configMINIMAL_STACK_SIZE * 5, NULL, 5, NULL, 0);
+
+    //xTaskCreatePinnedToCore(my_stopwatch, "logtime", configMINIMAL_STACK_SIZE * 5, NULL, 6, NULL, 1);
 }
 
 static void my_alarm(void *pvParameters) {
