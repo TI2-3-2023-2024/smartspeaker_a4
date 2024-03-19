@@ -42,7 +42,7 @@ void app_init()
     esp_log_level_set(RECORDER_TAG, ESP_LOG_INFO);
 
     if (!is_init_lcd)
-    {    
+    {
         is_init_lcd = true;
         lcd_init();
     }
@@ -51,15 +51,14 @@ void app_init()
 
     create_input_key_service();
 
-    // Set up SD card playlist and scan music
-    if(!is_sdcard_init){
-        setup_sdcard_playlist();
-        is_sdcard_init = true;
-    }
+//    // Set up SD card playlist and scan music
+//    if(!is_sdcard_init){
+//        setup_sdcard_playlist();
+//        is_sdcard_init = true;
+//    }
+//
+//    start_codec_chip();
 
-    start_codec_chip();
-
-    create_audio_pipeline();
 }
 
 /**
@@ -171,6 +170,7 @@ void create_audio_pipeline()
 // Create audio elements for the pipeline
 void create_audio_elements()
 {
+    create_audio_pipeline();
     if (codec_config) // sdcard player init
     {
         ESP_LOGI(SDCARD_TAG, "[4.1] Create i2s stream to write data to codec chip");

@@ -50,6 +50,8 @@
  */
 void menu(void *pvParameters);
 
+void timeshow(void *pvParameters);
+
 /**
  * @brief Writes a string at the specified position on the LCD.
  *

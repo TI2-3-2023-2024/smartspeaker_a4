@@ -51,8 +51,7 @@ void obtain_time(void)
     }
 
     // Set timezone
-    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
-    tzset();
+
 
     // Disconnect from network
     ESP_ERROR_CHECK( example_disconnect());

@@ -83,7 +83,7 @@ void init_radio(void *arg)
 
     // Set up URI for the stream
     ESP_LOGI(TAG, "[2.6] Set up uri (http as http_stream, mp3 as mp3 decoder, and default output is i2s)");
-    audio_element_set_uri(http_stream_reader, radio_streams[0]);
+    audio_element_set_uri(http_stream_reader, radio_streams[1]);
 
     // Set up event listener for pipeline
     ESP_LOGI(TAG, "[ 3 ] Set up event listener");
