@@ -43,8 +43,7 @@ void obtain_time(custom_wifi_config* config)
     }
 
     // Set timezone
-    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
-    tzset();
+
 
     // Disconnect from network
     disconnect_wifi(config);

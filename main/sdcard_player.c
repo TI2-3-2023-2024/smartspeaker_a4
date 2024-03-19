@@ -8,11 +8,11 @@ extern esp_periph_set_handle_t set;
 
 const char* SDCARD_PLAYER = "SDCARD_PLAYER";
 
-void sdcard_playlist(const char** filesArray, int arraySize)
+void sdcard_playlist(const char** filesArray, const char* path, int arraySize)
 {
     int currentFile = 0;
     if(filesArray[0] != NULL){
-        play_next_file(filesArray[0]);
+        play_next_file(filesArray[0], path);
     }
     while (1)
     {
@@ -52,7 +52,7 @@ void sdcard_playlist(const char** filesArray, int arraySize)
                         else{
                             ESP_LOGW(SDCARD_PLAYER, "[ * ] Finished, advancing to the next file");
                             ESP_LOGW(SDCARD_PLAYER, "URL: %s", filesArray[currentFile]);
-                            play_next_file(filesArray[currentFile]);
+                            play_next_file(filesArray[currentFile], path);
                         }
                 }
                 continue;
@@ -62,14 +62,16 @@ void sdcard_playlist(const char** filesArray, int arraySize)
     sdcard_player_stop();
 }
 
-void play_next_file(const char *sound_file) {
+void play_next_file(const char *sound_file, const char* path) {
     // Stop any currently playing sound
     audio_pipeline_stop(pipeline);
     audio_pipeline_wait_for_stop(pipeline);
     
     // Set the URI to the sound file on the SD card
     char uri[32];
-    snprintf(uri, 32, "/sdcard/NL/%s", sound_file);
+    snprintf(uri, 32, "/sdcard/%s/%s", path, sound_file);
+    printf("%s", uri);
+    
     audio_element_set_uri(fatfs_stream_reader, uri);
     
     //Reset the pipeline and run it to play the sound

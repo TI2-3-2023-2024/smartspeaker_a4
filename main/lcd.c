@@ -1,9 +1,12 @@
+#include "init.h"
 #include "sdcard_player.h"
 #include "lcd.h"
 #include "recorder.h"
-#include "init.h"
+#include "playlist.h"
 
 const char *TAG = "LCD";
+
+extern struct tm timeinfo;
 
 typedef struct Element_Position
 {
@@ -14,13 +17,18 @@ typedef struct Element_Position
 extern Element_Position element_position;
 extern Element_Position page_position;
 
+bool audio_mode_toggle = false;
+
+TaskHandle_t taskhandle;
+TaskStatus_t task_status;
+bool show_time;
+
 /**
  * Variable for HD44780 I2C LCD configuration.
  */
 extern hd44780_t lcd;
 
-esp_err_t touchpad_handle(periph_service_handle_t handle, periph_service_event_t *evt, void *ctx)
-{
+esp_err_t touchpad_handle(periph_service_handle_t handle, periph_service_event_t *evt, void *ctx) {
     return lcd_touchpad_handle(evt, ctx);
 }
 
@@ -62,11 +70,10 @@ void menu(void *pvParameters)
 
     // Writing the lines
     write_and_upload_char(1, 1, 0, " Internet Radio");
-    write_and_upload_char(1, 2, 1, " Sampler");
-    write_and_upload_char(1, 3, 2, " Tuner");
+    write_and_upload_char(1, 2, 1, " Tijd");
+    write_and_upload_char(1, 3, 2, " Weer");
 
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
         write_char_on_pos(i + 9, 0, 3);
     }
     write_char_on_pos(9, 0, 6);
@@ -79,76 +86,67 @@ void menu(void *pvParameters)
     }
 }
 
-bool audio_mode_toggle = false;
-
 // Handle touch pad events to control music playback and adjust volume
-esp_err_t lcd_touchpad_handle(periph_service_event_t *evt, void *ctx)
-{
-    if (!audio_mode_toggle)
-    {
+esp_err_t lcd_touchpad_handle(periph_service_event_t *evt, void *ctx) {
+    if (!audio_mode_toggle) {
         printf("INSIDE LCD TOUCHPAD HANDLE!!\n");
-        if (evt->type == INPUT_KEY_SERVICE_ACTION_CLICK_RELEASE)
-        {
-            ESP_LOGW(TAG, "[ * ] input key id is %d", (int)evt->data);
+        if (evt->type == INPUT_KEY_SERVICE_ACTION_CLICK_RELEASE) {
+            ESP_LOGW(TAG, "[ * ] input key id is %d", (int) evt->data);
 
-            switch ((int)evt->data)
-            {
-            case INPUT_KEY_USER_ID_PLAY:
-                ESP_LOGW(TAG, "[ * ] [Play] input key event");
-                play_button_handle();
-                break;
-            case INPUT_KEY_USER_ID_SET:
-                ESP_LOGW(TAG, "[ * ] [Set] input key event");
-                set_button_handle();
-                break;
-            case INPUT_KEY_USER_ID_VOLUP:
-                ESP_LOGW(TAG, "[ * ] [Vol+] input key event");
-                vol_up_handle();
-                break;
-            case INPUT_KEY_USER_ID_VOLDOWN:
-                ESP_LOGW(TAG, "[ * ] [Vol-] input key event");
-                vol_down_handle();
-                break;
-            case INPUT_KEY_USER_ID_MODE:
-                ESP_LOGW(TAG, "[ * ] [MODE-] input key event");
-                audio_mode_toggle = true;
-                mode_handle();
-                break;
-            case INPUT_KEY_USER_ID_REC:
-                ESP_LOGW(TAG, "[ * ] [REC-] input key event");
-                rec_handle();
-                break;
+            switch ((int) evt->data) {
+                case INPUT_KEY_USER_ID_PLAY:
+                    ESP_LOGW(TAG, "[ * ] [Play] input key event");
+                    play_button_handle();
+                    break;
+                case INPUT_KEY_USER_ID_SET:
+                    ESP_LOGW(TAG, "[ * ] [Set] input key event");
+                    set_button_handle();
+                    break;
+                case INPUT_KEY_USER_ID_VOLUP:
+                    ESP_LOGW(TAG, "[ * ] [Vol+] input key event");
+                    vol_up_handle();
+                    break;
+                case INPUT_KEY_USER_ID_VOLDOWN:
+                    ESP_LOGW(TAG, "[ * ] [Vol-] input key event");
+                    vol_down_handle();
+                    break;
+                case INPUT_KEY_USER_ID_MODE:
+                    ESP_LOGW(TAG, "[ * ] [MODE-] input key event");
+                    audio_mode_toggle = true;
+                    mode_handle();
+                    break;
+                case INPUT_KEY_USER_ID_REC:
+                    ESP_LOGW(TAG, "[ * ] [REC-] input key event");
+                    rec_handle();
+                    break;
             }
         }
-    }
-    else
-    {
+    } else {
         printf("INSIDE SDCARD TOUCHPAD HANDLE!!\n");
-        if (evt->type == INPUT_KEY_SERVICE_ACTION_CLICK_RELEASE)
-        {
-            ESP_LOGW(TAG, "[ * ] input key id is %d", (int)evt->data);
+        if (evt->type == INPUT_KEY_SERVICE_ACTION_CLICK_RELEASE) {
+            ESP_LOGW(TAG, "[ * ] input key id is %d", (int) evt->data);
 
             switch ((int)evt->data)
             {
             case INPUT_KEY_USER_ID_PLAY:
                 ESP_LOGW(TAG, "[ * ] [Play] input key event");
-                play_button_handle();
+                // play_button_handle();
                 break;
             case INPUT_KEY_USER_ID_SET:
                 ESP_LOGW(TAG, "[ * ] [Set] input key event");
-                set_button_handle();
+                // set_button_handle();
                 break;
             case INPUT_KEY_USER_ID_VOLUP:
                 ESP_LOGW(TAG, "[ * ] [Vol+] input key event");
-                vol_up_handle();
+                // vol_up_handle();
                 break;
             case INPUT_KEY_USER_ID_VOLDOWN:
                 ESP_LOGW(TAG, "[ * ] [Vol-] input key event");
-                vol_down_handle();
+                // vol_down_handle();
                 break;
             case INPUT_KEY_USER_ID_MODE:
                 ESP_LOGW(TAG, "[ * ] [MODE-] input key event");
-                mode_handle();
+                // mode_handle();
                 break;
             case INPUT_KEY_USER_ID_REC:
                 ESP_LOGW(TAG, "[ * ] [REC-] input key event");
@@ -163,106 +161,100 @@ esp_err_t lcd_touchpad_handle(periph_service_event_t *evt, void *ctx)
 
 void rec_handle()
 {
+    audio_mode_toggle = false;
+
+    show_time = false;
+
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+
     hd44780_clear(&lcd);
     page_position.x = 9;
     page_position.y = 0;
     write_and_upload_char(1, 1, 0, " Internet Radio");
-    write_and_upload_char(1, 2, 1, " Sampler");
-    write_and_upload_char(1, 3, 2, " Tuner");
+    write_and_upload_char(1, 2, 1, " Tijd");
+    write_and_upload_char(1, 3, 2, " Weer");
 
-    for (int i = 0; i < 3; i++)
-    {
+
+    
+    for (int i = 0; i < 3; i++) {
         write_char_on_pos(i + 9, 0, 3);
     }
     write_char_on_pos(9, 0, 6);
 
     write_char_on_pos(0, 1, 4);
-
     create_input_key_service();
 }
 
-void play_button_handle()
-{
-    if (element_position.y != 3)
-    {
+void play_button_handle() {
+    if (element_position.y != 3) {
         clear_at_position(element_position.x, element_position.y);
         element_position.y += 1;
         write_char_on_pos(element_position.x, element_position.y, 4);
     }
 }
 
-void set_button_handle()
-{
-    if (element_position.y != 1)
-    {
+void set_button_handle() {
+    if (element_position.y != 1) {
         clear_at_position(element_position.x, element_position.y);
         element_position.y -= 1;
         write_char_on_pos(element_position.x, element_position.y, 4);
     }
 }
 
-void vol_up_handle()
-{
-    if (page_position.x != 11)
-    {
+void vol_up_handle() {
+    if (page_position.x != 11) {
         hd44780_clear(&lcd);
+
         write_char_on_pos(9, 0, 3);
         write_char_on_pos(10, 0, 3);
         write_char_on_pos(11, 0, 3);
 
         page_position.x += 1;
         write_char_on_pos(page_position.x, page_position.y, 6);
-        if (page_position.x == 9)
-        {
+        if (page_position.x == 9) {
             write_and_upload_char(1, 1, 0, " Internet Radio");
-            write_and_upload_char(1, 2, 1, " Sampler");
-            write_and_upload_char(1, 3, 2, " Tuner");
+            write_and_upload_char(1, 2, 1, " Tijd");
+            write_and_upload_char(1, 3, 2, " Weer");
         }
         else if (page_position.x == 10)
         {
-            write_and_upload_char(1, 1, 0, " Recorder");
-            write_and_upload_char(1, 2, 1, " Audio Speaker");
-            write_and_upload_char(1, 3, 2, " Time");
+            write_and_upload_char(1, 1, 0, " Opname");
+            write_and_upload_char(1, 2, 1, " Audio Speler");
+            write_and_upload_char(1, 3, 2, " Papagaai");
         }
         else if (page_position.x == 11)
         {
-            write_and_upload_char(1, 1, 0, " Eren");
-            write_and_upload_char(1, 2, 1, " Matheus");
-            write_and_upload_char(1, 3, 2, " Moustapha");
+            write_and_upload_char(1, 1, 0, " Voorspelling");
         }
 
         write_char_on_pos(0, 1, 4);
     }
 }
 
-void vol_down_handle()
-{
-    if (page_position.x != 9)
-    {
+void vol_down_handle() {
+    if (page_position.x != 9) {
         hd44780_clear(&lcd);
+
         write_char_on_pos(9, 0, 3);
         write_char_on_pos(10, 0, 3);
         write_char_on_pos(11, 0, 3);
 
         page_position.x -= 1;
         write_char_on_pos(page_position.x, page_position.y, 6);
-        if (page_position.x == 9)
-        {
+        if (page_position.x == 9) {
             write_and_upload_char(1, 1, 0, " Internet Radio");
-            write_and_upload_char(1, 2, 1, " Sampler");
-            write_and_upload_char(1, 3, 2, " Tuner");
+            write_and_upload_char(1, 2, 1, " Tijd");
+            write_and_upload_char(1, 3, 2, " Weer");
         }
         else if (page_position.x == 10)
         {
-            write_and_upload_char(1, 1, 0, " Recorder");
-            write_and_upload_char(1, 2, 1, " Audio Speaker");
-            write_and_upload_char(1, 3, 2, " Time");
+            write_and_upload_char(1, 1, 0, " Opname");
+            write_and_upload_char(1, 2, 1, " Audio Speler");
+            write_and_upload_char(1, 3, 2, " Papagaai");
         }
         else if (page_position.x == 11)
         {
-            write_and_upload_char(1, 1, 0, " Eren");
-            write_and_upload_char(1, 2, 1, " Matheus");
-            write_and_upload_char(1, 3, 2, " Moustapha");
+            write_and_upload_char(1, 1, 0, " Voorspelling");
         }
 
         write_char_on_pos(0, 1, 4);
@@ -279,17 +271,28 @@ void mode_handle()
         case 1:
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Internet Radio");
-            write_char_on_pos(0, 1, 4);
             break;
         case 2:
+            app_init();
             hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "Sampler");
+            write_string_on_pos(0, 0, "Tijd");
             write_char_on_pos(0, 1, 4);
+            xTaskCreate(timeshow, "timeshow", configMINIMAL_STACK_SIZE * 5, NULL, 4, taskhandle);
+
+            time_t now;
+            time(&now);
+            localtime_r(&now, &timeinfo);
+            audio_mode_toggle = true;
+            create_audio_elements();
+            char* files[20];
+            print_full_time(&timeinfo);
+            get_filenames_based_on_time(files, &timeinfo);
+            sdcard_playlist(files, "NL/", 20);
+            audio_mode_toggle = false;
             break;
         case 3:
             hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "Tuner");
-            write_char_on_pos(0, 1, 4);
+            write_string_on_pos(0, 0, "Weer");
             break;
         }
     }
@@ -300,27 +303,25 @@ void mode_handle()
         case 1:
             app_init();
             hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "Recorder");
-            write_char_on_pos(0, 1, 4);
-            create_audio_elements();
-            audio_mode_toggle = false;
+            write_string_on_pos(0, 0, "Opname");
+            create_recording_elements();
+            //audio_mode_toggle = false;
             create_recording("eren.wav", 6);
-            write_string_on_pos(2, 1, "Recording Finished");
+            write_string_on_pos(2, 1, "Opname af");
             break;
-        case 2:
+        case 2: 
             app_init();
             hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "Audio Speaker");
+            write_string_on_pos(0, 0, "Audio Speler");
             audio_mode_toggle = true;
             create_audio_elements();
-            // play_sound_by_filename("eren");
+            const char *files2[] = {"eren.wav"};
+            sdcard_playlist(files2,"",1);
             audio_mode_toggle = false;
-            write_char_on_pos(0, 1, 4);
             break;
         case 3:
             hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "Time");
-            write_char_on_pos(0, 1, 4);
+            write_string_on_pos(0, 0, "Papagaai");
             break;
         }
     }
@@ -330,41 +331,76 @@ void mode_handle()
         {
         case 1:
             hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "Eren");
+            write_string_on_pos(0, 0, "Voorspelling");
+            break;
+        case 2: // Empty page
+            hd44780_clear(&lcd);
+            write_string_on_pos(0, 0, "");
             write_char_on_pos(0, 1, 4);
             break;
-        case 2:
+        case 3: // Empty page
             hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "Matheus");
-            write_char_on_pos(0, 1, 4);
-            break;
-        case 3:
-            hd44780_clear(&lcd);
-            write_string_on_pos(0, 0, "Moustapha");
+            write_string_on_pos(0, 0, "");
             write_char_on_pos(0, 1, 4);
             break;
         }
     }
 }
 
-void write_string_on_pos(int x, int y, const char *string)
-{
+// Initializing a simple menu
+void timeshow(void *pvParameters) {
+    show_time = true;
+    time_t now;
+    struct tm timeinfo;
+    time(&now);
+    localtime_r(&now, &timeinfo);
+
+    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
+    tzset();
+
+    char strftime_buf[10];
+    char strftime_bufsec[5];
+
+    strftime(strftime_buf, sizeof(strftime_buf), "%d/%m", &timeinfo);
+
+    // Writing something
+    write_string_on_pos(0, 0, strftime_buf);
+
+    ESP_LOGI("LCD PRINT", "print to screen");
+
+    for (;;) {
+        time(&now);
+        localtime_r(&now, &timeinfo);
+
+        strftime(strftime_bufsec, sizeof(strftime_bufsec), "%S", &timeinfo);
+
+        if (strftime_bufsec[1] == 0 || strftime_bufsec[1] % 2 == 0)
+            strftime(strftime_buf, sizeof(strftime_buf), "%H:%M", &timeinfo);
+        else strftime(strftime_buf, sizeof(strftime_buf), "%H %M", &timeinfo);
+
+        write_string_on_pos(15, 0, strftime_buf);
+
+        if (!show_time) vTaskDelete(taskhandle);
+
+        vTaskDelay(pdMS_TO_TICKS(50));
+    }
+}
+
+void write_string_on_pos(int x, int y, const char *string) {
     element_position.x = x;
     element_position.y = y;
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_puts(&lcd, string); // Output the specified string
 }
 
-void write_char_on_pos(int x, int y, char c)
-{
+void write_char_on_pos(int x, int y, char c) {
     element_position.x = x;
     element_position.y = y;
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_putc(&lcd, c);      // Output the specified character
 }
 
-void write_and_upload_char(int x, int y, char c, const char *string)
-{
+void write_and_upload_char(int x, int y, char c, const char *string) {
     element_position.x = x;
     element_position.y = y;
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
@@ -372,28 +408,22 @@ void write_and_upload_char(int x, int y, char c, const char *string)
     hd44780_puts(&lcd, string); // Output the specified character
 }
 
-void clear_at_position(int x, int y)
-{
+void clear_at_position(int x, int y) {
     element_position.x = x;
     element_position.y = y;
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_putc(&lcd, 5);      // Output the specified string
 }
 
-void clear_line(int line)
-{
+void clear_line(int line) {
     element_position.x = 0;
     element_position.y = line;
-    if (line == 0 || line == 1 || line == 2 || line == 3)
-    {
+    if (line == 0 || line == 1 || line == 2 || line == 3) {
         hd44780_gotoxy(&lcd, 0, line);
-        for (int i = 0; i < 20; i++)
-        {
+        for (int i = 0; i < 20; i++) {
             clear_at_position(i, line);
         }
-    }
-    else
-    {
+    } else {
         printf("Specified line to clean incorrect!\n");
     }
 }
