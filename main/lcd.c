@@ -334,8 +334,8 @@ void mode_handle()
             write_string_on_pos(0, 0, "Audio Speler");
             audio_mode_toggle = true;
             create_audio_elements();
-            // const char *files2[] = {"eren.wav"};
-            // sdcard_playlist(files2, "", 1);
+            const char *files2[] = {"eren.wav"};
+            sdcard_playlist(files2, "", 1);
             audio_mode_toggle = false;
             break;
 
@@ -354,10 +354,12 @@ void mode_handle()
 
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Voorspelling");
+            audio_mode_toggle = true;
             create_audio_elements();
             char *predict_playlist[5];
             get_filenames_based_on_prediction(predict_playlist, 5);
             sdcard_playlist(predict_playlist, "RND_VSP/", 5);
+            audio_mode_toggle = false;
             break;
         case 2: // Empty page
             hd44780_clear(&lcd);
