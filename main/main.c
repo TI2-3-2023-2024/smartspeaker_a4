@@ -52,6 +52,11 @@ void app_main(void)
     xTaskCreate(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 1, NULL);
     
     
+    create_audio_elements();
+    char* files[20];
+    print_full_time(&timeinfo);
+    get_filenames_based_on_time(files, &timeinfo);
+    sdcard_playlist(files, 20);
 
     
     //xTaskCreate(init_radio, "radio_test", configMINIMAL_STACK_SIZE * 5, (void*)&wifi_config, 5, NULL);
