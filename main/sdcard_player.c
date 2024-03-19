@@ -69,7 +69,7 @@ void play_next_file(const char *sound_file) {
     
     // Set the URI to the sound file on the SD card
     char uri[32];
-    snprintf(uri, 32, "/sdcard/NL/%s", sound_file);
+    snprintf(uri, 32, "/sdcard/%s", sound_file);
     audio_element_set_uri(fatfs_stream_reader, uri);
     
     //Reset the pipeline and run it to play the sound

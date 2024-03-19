@@ -195,7 +195,7 @@ void create_audio_elements()
     ESP_LOGW(SDCARD_TAG, "SDCARD INIT FINISHED!");
 }
 
-void create_recording_element()
+void create_recording_elements()
 {
     // Create FATFS stream to write data to SD card
     ESP_LOGI(RECORDER_TAG, "[3.1] Create fatfs stream to write data to sdcard");

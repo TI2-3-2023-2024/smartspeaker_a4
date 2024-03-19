@@ -1,7 +1,7 @@
+#include "init.h"
 #include "sdcard_player.h"
 #include "lcd.h"
 #include "recorder.h"
-#include "init.h"
 
 const char *TAG = "LCD";
 
@@ -277,8 +277,12 @@ void mode_handle()
             write_string_on_pos(0, 0, "Internet Radio");
             break;
         case 2:
+            app_init();
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Tijd");
+            create_audio_elements();
+            const char *files[] = {"rec.wav"};
+            sdcard_playlist(files, 1);
             break;
         case 3:
             hd44780_clear(&lcd);
@@ -294,18 +298,19 @@ void mode_handle()
             app_init();
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Opname");
-            create_audio_elements();
-            audio_mode_toggle = false;
+            create_recording_elements();
+            //audio_mode_toggle = false;
             create_recording("eren.wav", 6);
             write_string_on_pos(2, 1, "Opname af");
             break;
-        case 2:
+        case 2: 
             app_init();
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Audio Speler");
             audio_mode_toggle = true;
             create_audio_elements();
-            // play_sound_by_filename("eren");
+            const char *files2[] = {"eren.wav"};
+            sdcard_playlist(files2,1);
             audio_mode_toggle = false;
             break;
         case 3:
