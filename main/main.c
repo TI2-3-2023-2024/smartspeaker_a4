@@ -47,9 +47,12 @@ void app_main(void)
     printf("%s", weer.location);
     printf("%f", weer.temperature);
 
-    ESP_ERROR_CHECK(i2cdev_init());
     app_init();
-    xTaskCreate(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 1, NULL);
+    create_audio_elements();
+    const char* files[] = {"NL/het_is.wav", "NL/8.wav", "NL/uur.wav"};
+    sdcard_playlist(files);
+
+    //xTaskCreate(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 1, NULL);
     
     
     //const char* time_dirty[15];
@@ -57,7 +60,7 @@ void app_main(void)
     //sdcard_player_init();
     //sdcard_player_start();
     
-    xTaskCreate(init_radio, "radio_test", configMINIMAL_STACK_SIZE * 5, (void*)&wifi_config, 5, NULL);
+    //xTaskCreate(init_radio, "radio_test", configMINIMAL_STACK_SIZE * 5, (void*)&wifi_config, 5, NULL);
 
     free(output_buffer);
 

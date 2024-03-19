@@ -269,8 +269,6 @@ void vol_down_handle()
     }
 }
 
-extern bool codec_config;
-
 void mode_handle()
 {
     // open content on specific page
@@ -304,8 +302,6 @@ void mode_handle()
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Recorder");
             write_char_on_pos(0, 1, 4);
-
-            codec_config = false; // false so recorder get initialized
             create_audio_elements();
             audio_mode_toggle = false;
             create_recording("eren.wav", 6);
@@ -315,10 +311,9 @@ void mode_handle()
             app_init();
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Audio Speaker");
-            codec_config = true;
             audio_mode_toggle = true;
             create_audio_elements();
-            play_sound_by_filename("eren");
+            // play_sound_by_filename("eren");
             audio_mode_toggle = false;
             write_char_on_pos(0, 1, 4);
             break;
