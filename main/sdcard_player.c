@@ -8,7 +8,7 @@ extern esp_periph_set_handle_t set;
 
 const char* SDCARD_PLAYER = "SDCARD_PLAYER";
 
-void sdcard_playlist(const char** filesArray)
+void sdcard_playlist(const char** filesArray, int arraySize)
 {
     int currentFile = 0;
     play_next_file(filesArray[0]);
@@ -43,21 +43,20 @@ void sdcard_playlist(const char** filesArray)
                 audio_element_state_t el_state = audio_element_get_state(i2s_stream_writer);
                 if (el_state == AEL_STATE_FINISHED)
                 {
-                    currentFile++;
+                        currentFile++;
+                        if(currentFile >= arraySize){
+                            break;
+                        }
 
-                    if(currentFile >= 3){
-                        break;
-                    }
-
-                    ESP_LOGW(SDCARD_PLAYER, "[ * ] Finished, advancing to the next file");
-                    
-                    ESP_LOGW(SDCARD_PLAYER, "URL: %s", filesArray[currentFile]);
-                    play_next_file(filesArray[currentFile]);
+                        ESP_LOGW(SDCARD_PLAYER, "[ * ] Finished, advancing to the next file");
+                        ESP_LOGW(SDCARD_PLAYER, "URL: %s", filesArray[currentFile]);
+                        play_next_file(filesArray[currentFile]);
                 }
                 continue;
             }
         }
     }
+    sdcard_player_stop();
 }
 
 void play_next_file(const char *sound_file) {
@@ -66,11 +65,11 @@ void play_next_file(const char *sound_file) {
     audio_pipeline_wait_for_stop(pipeline);
     
     // Set the URI to the sound file on the SD card
-    char uri[64];
-    snprintf(uri, 64, "/sdcard/%s", sound_file);
+    char uri[32];
+    snprintf(uri, 32, "/sdcard/NL/%s", sound_file);
     audio_element_set_uri(fatfs_stream_reader, uri);
     
-    // Reset the pipeline and run it to play the sound
+    //Reset the pipeline and run it to play the sound
     audio_pipeline_reset_ringbuffer(pipeline);
     audio_pipeline_reset_elements(pipeline);
     audio_pipeline_change_state(pipeline, AEL_STATE_INIT);

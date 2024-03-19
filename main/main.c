@@ -34,6 +34,7 @@ void app_main(void)
         obtain_time(&wifi_config);
         // update 'now' variable with current time
         time(&now);
+        localtime_r(&now, &timeinfo);
     }
 
     // Declare local_response_buffer with size (MAX_HTTP_OUTPUT_BUFFER + 1) to prevent out of bound access when
@@ -49,8 +50,11 @@ void app_main(void)
 
     app_init();
     create_audio_elements();
-    const char* files[] = {"NL/het_is.wav", "NL/8.wav", "NL/uur.wav"};
-    sdcard_playlist(files);
+    char* files[20];
+    print_full_time(&timeinfo);
+    get_filenames_based_on_time(files, &timeinfo);
+    sdcard_playlist(files, 20);
+    sdcard_player_stop();
 
     //xTaskCreate(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 1, NULL);
     
