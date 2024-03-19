@@ -17,11 +17,18 @@
 #include "custom_wifi.h"
 #include "weer.h"
 #include "frequency_detect.h"
+#include "rnd_prediction.h"
 
 static const char* TAG = "MAIN";
 
 void app_main(void)
 {
+  
+    xTaskCreate(random_prediction, "random_prediction", configMINIMAL_STACK_SIZE * 5, NULL, 1, NULL);
+    TickType_t xDelay = 1000 / portTICK_PERIOD_MS;
+    vTaskDelay(xDelay);
+    xTaskCreate(random_prediction, "random_prediction1", configMINIMAL_STACK_SIZE * 5, NULL, 1, NULL);
+   
     time_t now;
     struct tm timeinfo;
     custom_wifi_config wifi_config = {0};
