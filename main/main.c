@@ -36,7 +36,6 @@ void app_main(void)
         time(&now);
     }
 
-
     // Declare local_response_buffer with size (MAX_HTTP_OUTPUT_BUFFER + 1) to prevent out of bound access when
     // it is used by functions like strlen(). The buffer should only be used upto size MAX_HTTP_OUTPUT_BUFFER
     init_wifi_nvs(&wifi_config);
@@ -44,16 +43,15 @@ void app_main(void)
 
     char* output_buffer = (char*)calloc(MAX_HTTP_OUTPUT_BUFFER+1, sizeof(char));   // Buffer to store response of http request
     RequestWeather(weer.location, &weer.temperature, output_buffer);
-
-    
+        
     printf("%s", weer.location);
     printf("%f", weer.temperature);
 
     ESP_ERROR_CHECK(i2cdev_init());
-
+    app_init();
     xTaskCreate(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 1, NULL);
     
-
+    
     //const char* time_dirty[15];
     //get_filenames_based_on_time(time_dirty, &timeinfo);
     //sdcard_player_init();
@@ -62,7 +60,5 @@ void app_main(void)
     xTaskCreate(init_radio, "radio_test", configMINIMAL_STACK_SIZE * 5, (void*)&wifi_config, 5, NULL);
 
     free(output_buffer);
-
-    // xTaskCreate(init_radio, "radio_test", configMINIMAL_STACK_SIZE * 5, NULL, 5, NULL);
 
 }
