@@ -14,6 +14,8 @@ typedef struct Element_Position
 extern Element_Position element_position;
 extern Element_Position page_position;
 
+bool audio_mode_toggle = false;
+
 /**
  * Variable for HD44780 I2C LCD configuration.
  */
@@ -62,8 +64,8 @@ void menu(void *pvParameters)
 
     // Writing the lines
     write_and_upload_char(1, 1, 0, " Internet Radio");
-    write_and_upload_char(1, 2, 1, " Sampler");
-    write_and_upload_char(1, 3, 2, " Tuner");
+    write_and_upload_char(1, 2, 1, " Tijd");
+    write_and_upload_char(1, 3, 2, " Weer");
 
     for (int i = 0; i < 3; i++)
     {
@@ -78,8 +80,6 @@ void menu(void *pvParameters)
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
-
-bool audio_mode_toggle = false;
 
 // Handle touch pad events to control music playback and adjust volume
 esp_err_t lcd_touchpad_handle(periph_service_event_t *evt, void *ctx)
@@ -132,23 +132,23 @@ esp_err_t lcd_touchpad_handle(periph_service_event_t *evt, void *ctx)
             {
             case INPUT_KEY_USER_ID_PLAY:
                 ESP_LOGW(TAG, "[ * ] [Play] input key event");
-                play_button_handle();
+                // play_button_handle();
                 break;
             case INPUT_KEY_USER_ID_SET:
                 ESP_LOGW(TAG, "[ * ] [Set] input key event");
-                set_button_handle();
+                // set_button_handle();
                 break;
             case INPUT_KEY_USER_ID_VOLUP:
                 ESP_LOGW(TAG, "[ * ] [Vol+] input key event");
-                vol_up_handle();
+                // vol_up_handle();
                 break;
             case INPUT_KEY_USER_ID_VOLDOWN:
                 ESP_LOGW(TAG, "[ * ] [Vol-] input key event");
-                vol_down_handle();
+                // vol_down_handle();
                 break;
             case INPUT_KEY_USER_ID_MODE:
                 ESP_LOGW(TAG, "[ * ] [MODE-] input key event");
-                mode_handle();
+                // mode_handle();
                 break;
             case INPUT_KEY_USER_ID_REC:
                 ESP_LOGW(TAG, "[ * ] [REC-] input key event");
@@ -163,12 +163,13 @@ esp_err_t lcd_touchpad_handle(periph_service_event_t *evt, void *ctx)
 
 void rec_handle()
 {
+    audio_mode_toggle = false;
     hd44780_clear(&lcd);
     page_position.x = 9;
     page_position.y = 0;
     write_and_upload_char(1, 1, 0, " Internet Radio");
-    write_and_upload_char(1, 2, 1, " Sampler");
-    write_and_upload_char(1, 3, 2, " Tuner");
+    write_and_upload_char(1, 2, 1, " Tijd");
+    write_and_upload_char(1, 3, 2, " Weer");
 
     for (int i = 0; i < 3; i++)
     {
@@ -177,7 +178,6 @@ void rec_handle()
     write_char_on_pos(9, 0, 6);
 
     write_char_on_pos(0, 1, 4);
-
     create_input_key_service();
 }
 
@@ -215,20 +215,18 @@ void vol_up_handle()
         if (page_position.x == 9)
         {
             write_and_upload_char(1, 1, 0, " Internet Radio");
-            write_and_upload_char(1, 2, 1, " Sampler");
-            write_and_upload_char(1, 3, 2, " Tuner");
+            write_and_upload_char(1, 2, 1, " Tijd");
+            write_and_upload_char(1, 3, 2, " Weer");
         }
         else if (page_position.x == 10)
         {
-            write_and_upload_char(1, 1, 0, " Recorder");
-            write_and_upload_char(1, 2, 1, " Audio Speaker");
-            write_and_upload_char(1, 3, 2, " Time");
+            write_and_upload_char(1, 1, 0, " Opname");
+            write_and_upload_char(1, 2, 1, " Audio Speler");
+            write_and_upload_char(1, 3, 2, " Papagaai");
         }
         else if (page_position.x == 11)
         {
-            write_and_upload_char(1, 1, 0, " Eren");
-            write_and_upload_char(1, 2, 1, " Matheus");
-            write_and_upload_char(1, 3, 2, " Moustapha");
+            write_and_upload_char(1, 1, 0, " Voorspelling");
         }
 
         write_char_on_pos(0, 1, 4);
@@ -249,20 +247,18 @@ void vol_down_handle()
         if (page_position.x == 9)
         {
             write_and_upload_char(1, 1, 0, " Internet Radio");
-            write_and_upload_char(1, 2, 1, " Sampler");
-            write_and_upload_char(1, 3, 2, " Tuner");
+            write_and_upload_char(1, 2, 1, " Tijd");
+            write_and_upload_char(1, 3, 2, " Weer");
         }
         else if (page_position.x == 10)
         {
-            write_and_upload_char(1, 1, 0, " Recorder");
-            write_and_upload_char(1, 2, 1, " Audio Speaker");
-            write_and_upload_char(1, 3, 2, " Time");
+            write_and_upload_char(1, 1, 0, " Opname");
+            write_and_upload_char(1, 2, 1, " Audio Speler");
+            write_and_upload_char(1, 3, 2, " Papagaai");
         }
         else if (page_position.x == 11)
         {
-            write_and_upload_char(1, 1, 0, " Eren");
-            write_and_upload_char(1, 2, 1, " Matheus");
-            write_and_upload_char(1, 3, 2, " Moustapha");
+            write_and_upload_char(1, 1, 0, " Voorspelling");
         }
 
         write_char_on_pos(0, 1, 4);
@@ -279,17 +275,14 @@ void mode_handle()
         case 1:
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Internet Radio");
-            write_char_on_pos(0, 1, 4);
             break;
         case 2:
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Tijd");
-            write_char_on_pos(0, 1, 4);
             break;
         case 3:
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Weer");
-            write_char_on_pos(0, 1, 4);
             break;
         }
     }
@@ -301,7 +294,6 @@ void mode_handle()
             app_init();
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Opname");
-            write_char_on_pos(0, 1, 4);
             create_audio_elements();
             audio_mode_toggle = false;
             create_recording("eren.wav", 6);
@@ -315,12 +307,10 @@ void mode_handle()
             create_audio_elements();
             // play_sound_by_filename("eren");
             audio_mode_toggle = false;
-            write_char_on_pos(0, 1, 4);
             break;
         case 3:
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Papagaai");
-            write_char_on_pos(0, 1, 4);
             break;
         }
     }
@@ -331,14 +321,13 @@ void mode_handle()
         case 1:
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Voorspelling");
-            write_char_on_pos(0, 1, 4);
             break;
-        case 2:
+        case 2: // Empty page
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "");
             write_char_on_pos(0, 1, 4);
             break;
-        case 3:
+        case 3: // Empty page
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "");
             write_char_on_pos(0, 1, 4);
