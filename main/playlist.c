@@ -3,21 +3,21 @@
 
 // Array of strings representing base numbers
 const char *baseNumberStrings[] = {
-        "0", "1", "2", "3", "4", "5", "6",
-        "7", "8", "9", "10", "11", "12", "13"
+        "0.wav", "1.wav", "2.wav", "3.wav", "4.wav", "5.wav", "6.wav",
+        "7.wav", "8.wav", "9.wav", "10.wav", "11.wav", "12.wav", "13.wav"
 };
 
 // Array of strings representing base ten numbers
 const char *baseTenNumberStrings[] = {
-        "10", "20", "30", "40", "50", "60"
+        "10.wav", "20.wav", "30.wav", "40.wav", "50.wav", "60.wav"
 };
 
-const char *en = "en";
-const char *hetIs = "het is";
-const char *uur = "uur";
-const char *minuten = "minuten";
-const char * seconden = "seconden";
-const char *invalidNumber = "bruh";
+const char *en = "en.wav";
+const char *hetIs = "het_is.wav";
+const char *uur = "uur.wav";
+const char *minuten = "minuten.wav";
+const char * seconden = "seconden.wav";
+const char *invalidNumber = "bruh.wav";
 
 /**
  * @brief Prints the text representation of a number based on its value.
@@ -61,11 +61,11 @@ void print_filenames_based_on_num(int num) {
 void print_full_time(struct tm *timeinfo) {
     printf("%s ", hetIs);
     print_filenames_based_on_num(timeinfo->tm_hour); // Print the hour
-    printf("%s, ", uur);
+    printf("%s ", uur);
     print_filenames_based_on_num(timeinfo->tm_min); // Print the minute
-    printf("minuten, ");
+    printf("%s ", minuten);
     print_filenames_based_on_num(timeinfo->tm_sec); // Print the second
-    printf("seconden");
+    printf("%s ", seconden);
 }
 
 /**
@@ -75,15 +75,8 @@ void print_full_time(struct tm *timeinfo) {
  * corresponding to the given number. It handles numbers up to 13 and base ten numbers up to 60.
  *
  * @param num The number for which the audio files are to be returned.
- * @return A pointer to the array of strings.
  */
-char **get_filenames_based_on_num(int num) {
-    char **file_array = malloc(3 * sizeof(char *)); // Allocate memory for the array of strings
-    if (file_array == NULL) {
-        // Handle memory allocation failure
-        return NULL;
-    }
-
+void get_filenames_based_on_num(char** file_array, int num) {
     // Check if the number is within the valid range
     if (num < MIN_NUM || num > MAX_NUM) {
         // Set all elements to "invalid number"
@@ -121,17 +114,12 @@ char **get_filenames_based_on_num(int num) {
  * of strings, formatted as "het is", hour, "uur", minute, "minuten", second, "seconden".
  * @param time get filename of times
  * @param timeinfo Pointer to the struct tm containing the time information.
- * @return A pointer to the array of strings.
  */
 void get_filenames_based_on_time(char** time, struct tm *timeinfo) {
-    if (time == NULL) {
-        // Handle memory allocation failure
-        return NULL;
-    }
-
-    char **hour_filenames = get_filenames_based_on_num(timeinfo->tm_hour);
-    char **min_filenames = get_filenames_based_on_num(timeinfo->tm_min);
-    char **seconden_filenames = get_filenames_based_on_num(timeinfo->tm_sec);
+    char *hour_filenames[3]; 
+    get_filenames_based_on_num(hour_filenames, timeinfo->tm_hour);
+    char **min_filenames[3];  
+    get_filenames_based_on_num(min_filenames, timeinfo->tm_min);
 
     int full_index = 0;
     time[full_index++] = hetIs;
@@ -142,7 +130,9 @@ void get_filenames_based_on_time(char** time, struct tm *timeinfo) {
     }
 
     time[full_index++] = uur;
-
+    
+    time[full_index++] = en;
+    
     i = 0;
     while (min_filenames[i] != NULL) { // Combine full_file_array and min_filenames
         time[full_index++] = min_filenames[i++];
@@ -150,14 +140,6 @@ void get_filenames_based_on_time(char** time, struct tm *timeinfo) {
 
     if(min_filenames != NULL){
         time[full_index++] = minuten;
-    }
-
-    while (seconden[i] != NULL) { // Combine full_file_array and min_filenames
-        time[full_index++] = seconden[i++];
-    }
-
-    if(seconden != NULL){
-        time[full_index++] = seconden;
     }
 
     time[full_index] = NULL; // Set NULL to indicate end of array

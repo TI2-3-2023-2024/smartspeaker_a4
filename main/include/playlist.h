@@ -41,7 +41,7 @@ void print_full_time(struct tm *timeinfo);
  * @param num The number for which the audio files are to be returned.
  * @return A pointer to the array of strings.
  */
-char ** get_filenames_based_on_num(int num);
+void get_filenames_based_on_num(char** file_array, int num);
 
 /**
  * @brief Returns an array of strings representing the audio files for the full time.

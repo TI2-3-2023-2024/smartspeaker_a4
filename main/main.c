@@ -22,46 +22,40 @@ static const char* TAG = "MAIN";
 
 void app_main(void)
 {
-    // time_t now;
-    // struct tm timeinfo;
-    // custom_wifi_config wifi_config = {0};
-    // weer_info weer;
-    // time(&now);
-    // localtime_r(&now, &timeinfo);
-    // // Is time set? If not, tm_year will be (1970 - 1900).
-    // if (timeinfo.tm_year < (2016 - 1900)) {
-    //     ESP_LOGI(TAG, "Time is not set yet. Connecting to WiFi and getting time over NTP.");
-    //     obtain_time(&wifi_config);
-    //     // update 'now' variable with current time
-    //     time(&now);
-    // }
+    time_t now;
+    struct tm timeinfo;
+    custom_wifi_config wifi_config = {0};
+    weer_info weer;
+    time(&now);
+    localtime_r(&now, &timeinfo);
+    // Is time set? If not, tm_year will be (1970 - 1900).
+    if (timeinfo.tm_year < (2016 - 1900)) {
+        ESP_LOGI(TAG, "Time is not set yet. Connecting to WiFi and getting time over NTP.");
+        obtain_time(&wifi_config);
+        // update 'now' variable with current time
+        time(&now);
+        localtime_r(&now, &timeinfo);
+    }
 
     // Declare local_response_buffer with size (MAX_HTTP_OUTPUT_BUFFER + 1) to prevent out of bound access when
     // it is used by functions like strlen(). The buffer should only be used upto size MAX_HTTP_OUTPUT_BUFFER
-    // init_wifi_nvs(&wifi_config);
-    // connect_wifi(&wifi_config);
+    init_wifi_nvs(&wifi_config);
+    connect_wifi(&wifi_config);
 
-    // char* output_buffer = (char*)calloc(MAX_HTTP_OUTPUT_BUFFER+1, sizeof(char));   // Buffer to store response of http request
-    // RequestWeather(weer.location, &weer.temperature, output_buffer);
+    char* output_buffer = (char*)calloc(MAX_HTTP_OUTPUT_BUFFER+1, sizeof(char));   // Buffer to store response of http request
+    RequestWeather(weer.location, &weer.temperature, output_buffer);
         
-    // printf("%s", weer.location);
-    // printf("%f", weer.temperature);
+    printf("%s", weer.location);
+    printf("%f", weer.temperature);
 
     app_init();
-    // create_audio_elements();
-    // const char* files[] = {"NL/het_is.wav", "NL/8.wav", "NL/uur.wav"};
-    // sdcard_playlist(files);
-
     xTaskCreate(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 1, NULL);
     
     
-    //const char* time_dirty[15];
-    //get_filenames_based_on_time(time_dirty, &timeinfo);
-    //sdcard_player_init();
-    //sdcard_player_start();
+
     
     //xTaskCreate(init_radio, "radio_test", configMINIMAL_STACK_SIZE * 5, (void*)&wifi_config, 5, NULL);
 
-    // free(output_buffer);
+    free(output_buffer);
 
 }
