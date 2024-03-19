@@ -45,18 +45,15 @@ void sdcard_playlist(const char** filesArray, int arraySize)
                 audio_element_state_t el_state = audio_element_get_state(i2s_stream_writer);
                 if (el_state == AEL_STATE_FINISHED)
                 {
-                        if(filesArray[currentFile] == NULL){
-                            break;
-                        }
-                        
                         currentFile++;
-                        if(currentFile >= arraySize){
+                        if(filesArray[currentFile] == NULL || currentFile >= arraySize){
                             break;
                         }
-
-                        ESP_LOGW(SDCARD_PLAYER, "[ * ] Finished, advancing to the next file");
-                        ESP_LOGW(SDCARD_PLAYER, "URL: %s", filesArray[currentFile]);
-                        play_next_file(filesArray[currentFile]);
+                        else{
+                            ESP_LOGW(SDCARD_PLAYER, "[ * ] Finished, advancing to the next file");
+                            ESP_LOGW(SDCARD_PLAYER, "URL: %s", filesArray[currentFile]);
+                            play_next_file(filesArray[currentFile]);
+                        }
                 }
                 continue;
             }

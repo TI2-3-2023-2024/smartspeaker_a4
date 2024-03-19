@@ -54,7 +54,6 @@ void app_main(void)
     print_full_time(&timeinfo);
     get_filenames_based_on_time(files, &timeinfo);
     sdcard_playlist(files, 20);
-    sdcard_player_stop();
 
     //xTaskCreate(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 1, NULL);
     
