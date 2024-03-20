@@ -39,4 +39,5 @@ static const char* radio_streams[3] = {
  *
  * @param arg Optional argument for passing additional initialization parameters.
  */
-void init_radio(void* arg);
+void init_radio(void* is_running);
+void stop_radio();

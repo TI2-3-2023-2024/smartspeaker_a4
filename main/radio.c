@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include "radio.h"
+#include "init.h"
 
 // Define a tag for logging purposes
 const static char *TAG = "RADIO";
-
+audio_pipeline_handle_t pipeline;
+audio_element_handle_t http_stream_reader, mp3_decoder, i2s_stream_writer;
+audio_event_iface_handle_t evt;
 /**
  * @brief Task function to initialize the internet radio.
  *
@@ -14,20 +17,18 @@ const static char *TAG = "RADIO";
  *
  * @param arg Optional argument for passing additional initialization parameters. Must be void* and will be cast to const char*.
  */
-void init_radio(void *arg)
+void init_radio(void *is_running)
 {
     /* Start audio pipeline with a http stream and mp3 decoder. */
-    audio_pipeline_handle_t pipeline;
-    audio_element_handle_t http_stream_reader, i2s_stream_writer, mp3_decoder;
 
     // Logging level configuration
     esp_log_level_set("*", ESP_LOG_WARN);
     esp_log_level_set(TAG, ESP_LOG_DEBUG);
 
     // Audio codec chip initialization
-    ESP_LOGI(TAG, "[ 1 ] Start audio codec chip");
-    audio_board_handle_t board_handle = audio_board_init();
-    audio_hal_ctrl_codec(board_handle->audio_hal, AUDIO_HAL_CODEC_MODE_DECODE, AUDIO_HAL_CTRL_START);
+    // ESP_LOGI(TAG, "[ 1 ] Start audio codec chip");
+    // audio_board_handle_t board_handle = audio_board_init();
+    // audio_hal_ctrl_codec(board_handle->audio_hal, AUDIO_HAL_CODEC_MODE_DECODE, AUDIO_HAL_CTRL_START);
 
     // Audio pipeline creation and element registration
     ESP_LOGI(TAG, "[2.0] Create audio pipeline for playback");
@@ -64,7 +65,7 @@ void init_radio(void *arg)
     // Set up event listener for pipeline
     ESP_LOGI(TAG, "[ 3 ] Set up event listener");
     audio_event_iface_cfg_t evt_cfg = AUDIO_EVENT_IFACE_DEFAULT_CFG();
-    audio_event_iface_handle_t evt = audio_event_iface_init(&evt_cfg);
+    evt = audio_event_iface_init(&evt_cfg);
 
     ESP_LOGI(TAG, "[3.1] Listening event from all elements of pipeline");
     audio_pipeline_set_listener(pipeline, evt);
@@ -101,31 +102,12 @@ void init_radio(void *arg)
             ESP_LOGW(TAG, "[ * ] Stop event received");
             break;
         }
-
-        // Cleanup and stop the audio pipeline
-        ESP_LOGI(TAG, "[ 6 ] Stop audio_pipeline");
-        audio_pipeline_stop(pipeline);
-        audio_pipeline_wait_for_stop(pipeline);
-        audio_pipeline_terminate(pipeline);
-
-        /* Terminate the pipeline before removing the listener */
-        audio_pipeline_unregister(pipeline, http_stream_reader);
-        audio_pipeline_unregister(pipeline, i2s_stream_writer);
-        audio_pipeline_unregister(pipeline, mp3_decoder);
-
-        audio_pipeline_remove_listener(pipeline);
-
-        /* Make sure audio_pipeline_remove_listener & audio_event_iface_remove_listener are called before destroying event_iface */
-        audio_event_iface_destroy(evt);
-
-        /* Release all resources */
-        audio_pipeline_deinit(pipeline);
-        audio_element_deinit(http_stream_reader);
-        audio_element_deinit(i2s_stream_writer);
-        audio_element_deinit(mp3_decoder);
     }
+}
 
-    ESP_LOGI(TAG, "[ 6 ] Stop audio_pipeline");
+void stop_radio()
+{
+    ESP_LOGW(TAG, "[ 6 ] Stop audio_pipeline");
     audio_pipeline_stop(pipeline);
     audio_pipeline_wait_for_stop(pipeline);
     audio_pipeline_terminate(pipeline);
@@ -137,7 +119,6 @@ void init_radio(void *arg)
 
     audio_pipeline_remove_listener(pipeline);
 
-
     /* Make sure audio_pipeline_remove_listener & audio_event_iface_remove_listener are called before destroying event_iface */
     audio_event_iface_destroy(evt);
 
@@ -146,5 +127,4 @@ void init_radio(void *arg)
     audio_element_deinit(http_stream_reader);
     audio_element_deinit(i2s_stream_writer);
     audio_element_deinit(mp3_decoder);
-
 }
