@@ -126,3 +126,9 @@ void vol_up_handle();
 void vol_down_handle();
 void mode_handle();
 void rec_handle();
+void time_rec_handle();
+void time_mode_handle();
+
+static void my_stopwatch(void* pvParameters);
+static void my_timer(void* pvParameters);
+
