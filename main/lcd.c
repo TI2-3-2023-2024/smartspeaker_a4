@@ -6,11 +6,13 @@
 #include "custom_wifi.h"
 #include "weer.h"
 #include "rnd_prediction.h"
+#include "radio.h"
 
 const char *TAG = "LCD";
 
 extern struct tm timeinfo;
 extern weer_info weer;
+extern custom_wifi_config wifi_config;
 
 typedef struct Element_Position
 {
@@ -24,6 +26,7 @@ extern Element_Position page_position;
 bool audio_mode_toggle = false;
 
 TaskHandle_t taskhandle;
+TaskHandle_t radiohandle = NULL;
 TaskStatus_t task_status;
 bool show_time;
 
@@ -172,6 +175,7 @@ esp_err_t lcd_touchpad_handle(periph_service_event_t *evt, void *ctx)
     return ESP_OK;
 }
 
+TaskHandle_t radio_task_handle = NULL; // Variable to hold the task handle
 void rec_handle()
 {
     audio_mode_toggle = false;
@@ -179,6 +183,14 @@ void rec_handle()
     show_time = false;
 
     vTaskDelay(500 / portTICK_PERIOD_MS);
+
+    if(radiohandle != NULL){
+        printf("delete\n");
+        vTaskDelete(radiohandle);
+        stop_radio();
+        printf("deleted\n");
+        radiohandle = NULL;  
+    }
 
     hd44780_clear(&lcd);
     page_position.x = 9;
@@ -195,6 +207,14 @@ void rec_handle()
 
     write_char_on_pos(0, 1, 4);
     create_input_key_service();
+
+    // Assuming radio_task_handle is the handle to your radio task
+    // if (radio_task_handle != NULL) {
+    //     vTaskDelete(radio_task_handle);
+    //     stop_radio();
+    //     radio_task_handle = NULL; // Reset the handle to indicate the task has been deleted
+    // }
+    // vTaskDelete(radio_task_handle);
 }
 
 void play_button_handle()
@@ -293,6 +313,7 @@ void mode_handle()
         case 1:
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Internet Radio");
+            xTaskCreate(init_radio, "radio", configMINIMAL_STACK_SIZE * 5, NULL, 4, &radiohandle);
             break;
         case 2:
             app_init();
@@ -355,6 +376,14 @@ void mode_handle()
         case 3:
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Papagaai");
+            create_recording_elements();
+            create_recording("rec.wav", 6);
+            write_string_on_pos(2, 1, "Opname af");
+            app_init();
+            create_audio_elements();
+            const char *files3[] = {"rec.wav"};
+            sdcard_playlist(files3, "", 1);
+            app_init();
             break;
         }
     }

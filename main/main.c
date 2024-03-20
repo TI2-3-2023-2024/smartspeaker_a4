@@ -28,9 +28,10 @@ static void my_timer(void *pvParameters);
 static void my_alarm(void *pvParameters);
 static void my_stopwatch(void *pvParameters);
 
+custom_wifi_config wifi_config = {0};
+
 void app_main(void) {
     time_t now;
-    custom_wifi_config wifi_config = {0};
     time(&now);
     localtime_r(&now, &timeinfo);
     // Is time set? If not, tm_year will be (1970 - 1900).
@@ -54,10 +55,11 @@ void app_main(void) {
     printf("%f", weer.temperature);
 
     app_init();
+
     xTaskCreate(menu, "lcd_test", configMINIMAL_STACK_SIZE * 5, NULL, 1, NULL);
 
     
-    //xTaskCreate(init_radio, "radio_test", configMINIMAL_STACK_SIZE * 5, (void*)&wifi_config, 5, NULL);
+    // xTaskCreate(init_radio, "radio_test", configMINIMAL_STACK_SIZE * 5, (void*)&wifi_config, 5, NULL);
 
     free(output_buffer);
 
