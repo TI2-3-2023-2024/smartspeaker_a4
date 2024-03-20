@@ -374,6 +374,7 @@ void mode_handle()
             break;
 
         case 3:
+            app_init();
             hd44780_clear(&lcd);
             write_string_on_pos(0, 0, "Papagaai");
             create_recording_elements();
