@@ -3,14 +3,16 @@
 #include "lcd.h"
 #include "recorder.h"
 #include "frequency_detect.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c"
-#define BYTE_TO_BINARY(byte)  \
-  ((byte) & 0x10 ? '1' : '0'), \
-  ((byte) & 0x08 ? '1' : '0'), \
-  ((byte) & 0x04 ? '1' : '0'), \
-  ((byte) & 0x02 ? '1' : '0'), \
-  ((byte) & 0x01 ? '1' : '0')
+#define BYTE_TO_BINARY(byte)         \
+    ((byte) & 0x10 ? '1' : '0'),     \
+        ((byte) & 0x08 ? '1' : '0'), \
+        ((byte) & 0x04 ? '1' : '0'), \
+        ((byte) & 0x02 ? '1' : '0'), \
+        ((byte) & 0x01 ? '1' : '0')
 
 const char *TAG = "LCD";
 
@@ -23,6 +25,8 @@ typedef struct Element_Position
 extern Element_Position element_position;
 extern Element_Position page_position;
 
+TaskHandle_t frequencyTaskHandle = NULL;
+
 bool audio_mode_toggle = false;
 
 /**
@@ -34,7 +38,6 @@ esp_err_t touchpad_handle(periph_service_handle_t handle, periph_service_event_t
 {
     return lcd_touchpad_handle(evt, ctx);
 }
-
 
 void display_percentage(int y, int percentage)
 {
@@ -60,16 +63,21 @@ void display_percentage(int y, int percentage)
         else
             clear_at_position(x, y);
     }
+    element_position.x = 0;
+    element_position.y = 1;
+    page_position.x = 9;
+    page_position.y = 0;
 }
 
-void updateVolume(VolumeMeter* volume, char value) {
+void updateVolume(VolumeMeter *volume, char value)
+{
     if (value < 0)
         value = 0;
     else if (value > 100)
         value = 100;
 
-    volume->firstBar -= 4;
-    volume->secondBar -= 2;
+    volume->firstBar -= 8;
+    volume->secondBar -= 4;
 
     if (volume->firstBar > 200)
         volume->firstBar = 0; // overflow
@@ -79,21 +87,18 @@ void updateVolume(VolumeMeter* volume, char value) {
     if (volume->firstBar < value)
         volume->firstBar = value;
     if (volume->secondBar < value)
-        volume->secondBar = value;
+    volume->secondBar = value;
 }
 
-void displayVolume(VolumeMeter *v, int y) {
+void displayVolume(VolumeMeter *v, int y)
+{
 
     display_percentage(y, v->firstBar);
     display_percentage(y + 1, v->secondBar);
 }
+SemaphoreHandle_t semaphore;
 
-/**
- * Initializes and displays a simple menu on the LCD.
- * @param pvParameters Pointer to task parameters (not used).
- */
-void menu(void *pvParameters)
-{
+void setupCustomChars() {
     /**
      * Bitmaps for LCD display icons, each icon consists of 8 rows to match LCD segment rows.
      * - tuner: Icon for tuner.
@@ -120,7 +125,17 @@ void menu(void *pvParameters)
     hd44780_upload_character(&lcd, 4, arrow);
     hd44780_upload_character(&lcd, 5, empty);
     hd44780_upload_character(&lcd, 6, current_page);
+}
 
+/**
+ * Initializes and displays a simple menu on the LCD.
+ * @param pvParameters Pointer to task parameters (not used).
+ */
+void menu(void *pvParameters)
+{
+    semaphore = xSemaphoreCreateMutex();
+    
+    setupCustomChars();
     page_position.x = 9;
     page_position.y = 0;
 
@@ -146,6 +161,11 @@ void menu(void *pvParameters)
 // Handle touch pad events to control music playback and adjust volume
 esp_err_t lcd_touchpad_handle(periph_service_event_t *evt, void *ctx)
 {
+    printf("\nPAGE_POSITION: X: %i\tY: %i\n", page_position.x, page_position.y);
+    printf("ELEMENT_POSITION: X: %i\tY: %i\n", element_position.x, element_position.y);
+
+
+
     if (!audio_mode_toggle)
     {
         printf("INSIDE LCD TOUCHPAD HANDLE!!\n");
@@ -225,8 +245,24 @@ esp_err_t lcd_touchpad_handle(periph_service_event_t *evt, void *ctx)
 
 void rec_handle()
 {
+    setupCustomChars();
+    if (frequencyTaskHandle != NULL)
+    {
+        vTaskDelay(250 / portTICK_RATE_MS);
+        ESP_LOGE("A", "STOPPING FREQUENCY TASK!");
+        stop_goertzel_detection();
+        // vTaskDelete(frequencyTaskHandle);
+        // vTaskDelay(250 / portTICK_RATE_MS);
+        ESP_LOGE("A", "STOPPED FREQUENCY TASK!");
+        // frequencyTaskHandle = NULL;
+    }
+    stop_goertzel_detection();
+    
+    vTaskDelay(500 / portTICK_RATE_MS);
+
     audio_mode_toggle = false;
     hd44780_clear(&lcd);
+
     page_position.x = 9;
     page_position.y = 0;
     write_and_upload_char(1, 1, 0, " Internet Radio");
@@ -240,31 +276,36 @@ void rec_handle()
     write_char_on_pos(9, 0, 6);
 
     write_char_on_pos(0, 1, 4);
-    create_input_key_service();
+    // create_input_key_service();
 }
 
 void play_button_handle()
 {
-    if (element_position.y != 3)
+    if (element_position.y < 3)
     {
         clear_at_position(element_position.x, element_position.y);
         element_position.y += 1;
         write_char_on_pos(element_position.x, element_position.y, 4);
-    }
+    } else
+        element_position.y = 3;
 }
 
 void set_button_handle()
 {
-    if (element_position.y != 1)
+    if (element_position.y > 1)
     {
         clear_at_position(element_position.x, element_position.y);
         element_position.y -= 1;
         write_char_on_pos(element_position.x, element_position.y, 4);
+    } else {
+        element_position.y = 1;
     }
 }
 
 void vol_up_handle()
 {
+    if (page_position.x > 11)
+        page_position.x = 11;
     if (page_position.x != 11)
     {
         hd44780_clear(&lcd);
@@ -400,13 +441,15 @@ void mode_handle()
             // ESP_LOGE("A", "WRITING TO LCD");
             write_string_on_pos(0, 0, "Frequency");
             // write_char_on_pos(0, 1, 4);
-            // ESP_LOGE("A", "STARTING GROETZEL");
-            // init_goertzel_detector();
-            // start_goertzel_detection();
-            // TaskHandle_t frequencyTaskHandle;
-            // xTaskCreate(frequency_detection_task, "FREQUENCY", configMINIMAL_STACK_SIZE * 5, NULL, 1, NULL);
+            ESP_LOGE("A", "STARTING GROETZEL");
+            init_goertzel_detector();
+            start_goertzel_detection();
 
-            frequency_detection_task(NULL);
+            // ESP_LOGE("A", "STARTING FREQUENCY TASK!");
+            // xTaskCreate(frequency_detection_task, "FREQUENCY", configMINIMAL_STACK_SIZE * 5, NULL, 5, frequencyTaskHandle);
+            // ESP_LOGE("A", "STARTED FREQUENCY TASK!");
+            ESP_LOGE("A", "DONE GOERTZEL");
+            app_init();
 
             break;
         case 3: // Empty page
@@ -418,37 +461,55 @@ void mode_handle()
     }
 }
 
+void validateElementPosition() {
+    element_position.x = 0;
+    if (element_position.y > 3)
+        element_position.y = 3;
+}
+
 void write_string_on_pos(int x, int y, const char *string)
 {
+    xSemaphoreTake(semaphore, portMAX_DELAY);
     element_position.x = x;
     element_position.y = y;
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_puts(&lcd, string); // Output the specified string
+    validateElementPosition();
+    xSemaphoreGive(semaphore);
 }
 
 void write_char_on_pos(int x, int y, char c)
 {
+    xSemaphoreTake(semaphore, portMAX_DELAY);
     element_position.x = x;
     element_position.y = y;
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_putc(&lcd, c);      // Output the specified character
+    validateElementPosition();
+    xSemaphoreGive(semaphore);
 }
 
 void write_and_upload_char(int x, int y, char c, const char *string)
 {
+    xSemaphoreTake(semaphore, portMAX_DELAY);
     element_position.x = x;
     element_position.y = y;
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_putc(&lcd, c);      // Output the specified string
     hd44780_puts(&lcd, string); // Output the specified character
+    validateElementPosition();
+    xSemaphoreGive(semaphore);
 }
 
 void clear_at_position(int x, int y)
 {
+    xSemaphoreTake(semaphore, portMAX_DELAY);
     element_position.x = x;
     element_position.y = y;
     hd44780_gotoxy(&lcd, x, y); // Move cursor to the specified coordinates
     hd44780_putc(&lcd, 5);      // Output the specified string
+    validateElementPosition();
+    xSemaphoreGive(semaphore);
 }
 
 void clear_line(int line)
@@ -467,4 +528,5 @@ void clear_line(int line)
     {
         printf("Specified line to clean incorrect!\n");
     }
+    validateElementPosition();
 }

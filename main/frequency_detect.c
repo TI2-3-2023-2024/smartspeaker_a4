@@ -51,6 +51,7 @@ extern goertzel_filter_data_t filters_data[GOERTZEL_NR_FREQS]; // Data for Goert
 extern int16_t *raw_buffer;                                    // Raw sample buffer
 
 TaskHandle_t taskHandle;
+QueueHandle_t xQueue;
 
 VolumeMeter volumeMeter;
 
@@ -136,10 +137,6 @@ void timeout_timer_callback(TimerHandle_t xTimer)
 {
     ESP_LOGI(TAG, "Timeout passed");
     timeout = false;
-
-    ESP_LOGW(TAG, "STOPPING TASK");
-
-    // stop_goertzel_detection();
 }
 
 /**
@@ -166,26 +163,13 @@ void detect_freq(int target_freq, float magnitude)
     if (timeout)
         return;
 
-    // char magnitude_s[50];
-    // sprintf(magnitude_s, "magnitude: %.2f", magnitude);
-    // char long_magnitude[50];
-    // sprintf(long_magnitude, "log mag.: %.2f", logMagnitude);
-
-    // clear_line(2);
-    // write_string_on_pos(0, 2, magnitude_s);
-    // write_string_on_pos(0, 3, long_magnitude);
-
-    // displayVolume(&volumeMeter, 2);
-
-    // printf("LOGMAGNITUDE %f\n", (logMagnitude * 2));
-
     if (logMagnitude > GOERTZEL_DETECTION_THRESHOLD)
     {
         ESP_LOGI(TAG, "Detection at frequency %d Hz (magnitude %.2f, log magnitude %.2f)", target_freq, magnitude, logMagnitude);
         start_timeout();
 
         clear_line(1);
-        
+
         char target[50];
         sprintf(target, "Detected freq: %d", target_freq);
         write_string_on_pos(0, 1, target);
@@ -279,6 +263,10 @@ void start_goertzel_detection()
         {
             float magnitude;
 
+            if (!running) {
+                break;
+            }
+
             // ESP_LOGE("A", "Checking goertzelf filter process");
             esp_err_t error = goertzel_filter_process(&filters_data[f], raw_buffer, GOERTZEL_BUFFER_LENGTH);
             ESP_ERROR_CHECK(error);
@@ -301,7 +289,8 @@ void start_goertzel_detection()
         }
     }
 
-    ESP_LOGW(TAG, "EXITING");
+    ESP_LOGE(TAG, "EXITING");
+    return;
 }
 
 /**
@@ -309,9 +298,18 @@ void start_goertzel_detection()
  */
 void stop_goertzel_detection()
 {
+    if (!running)
+        return;
+
     running = false;
 
-    ESP_LOGI(TAG, "Deallocate raw sample buffer memory");
+    if (raw_buffer == NULL)
+    {
+        ESP_LOGE(TAG, "RAW_BUFFER IS NULL");
+        return;
+    }
+
+    ESP_LOGE(TAG, "Deallocate raw sample buffer memory");
     free(raw_buffer);
 
     audio_pipeline_stop(pipeline);

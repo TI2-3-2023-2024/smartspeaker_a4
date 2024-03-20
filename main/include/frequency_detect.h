@@ -5,7 +5,7 @@
 #define GOERTZEL_SAMPLE_RATE_HZ 8000 // Sample rate in [Hz]
 #define GOERTZEL_FRAME_LENGTH_MS 100 // Block length in [ms]
 #define GOERTZEL_BUFFER_LENGTH (GOERTZEL_FRAME_LENGTH_MS * GOERTZEL_SAMPLE_RATE_HZ / 1000) // Buffer length in samples
-#define GOERTZEL_DETECTION_THRESHOLD 47.0f // Detect a tone when log magnitude is above this value
+#define GOERTZEL_DETECTION_THRESHOLD 48.0f // Detect a tone when log magnitude is above this value
 
 // Audio capture settings
 #define AUDIO_SAMPLE_RATE 48000 // Audio capture sample rate [Hz]

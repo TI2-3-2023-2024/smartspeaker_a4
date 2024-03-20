@@ -150,6 +150,7 @@ void start_codec_chip()
 // Create and start input key service
 void create_input_key_service()
 {
+
     ESP_LOGW(SDCARD_TAG, "[ 3 ] Create and start input key service");
     input_key_service_info_t input_key_info[] = INPUT_KEY_DEFAULT_INFO();
     input_key_service_cfg_t input_cfg = INPUT_KEY_SERVICE_DEFAULT_CONFIG();
