@@ -68,7 +68,7 @@ void create_recording(const char *string, int recording_length) {
             printf("in OUTER if\n");
             ESP_LOGI(RECORDER_TAG, "[ * ] Recording ... %d", second_recorded);
             if (second_recorded >= recording_length) {
-                printf("in inner if\n");
+                printf("seconds recorded exceeds recording length\n");
                 audio_element_set_ringbuf_done(i2s_stream_reader);
             
             }

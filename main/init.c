@@ -2,9 +2,14 @@
 #include "sdcard_player.h"
 #include "lcd.h"
 
+#include "raw_stream.h"
+#include "frequency_detect.h"
+#include "goertzel_filter.h"
+
 const char *RECORDER_TAG = "RECORD_TO_SDCARD";
+const char *ALT_RECORDER_TAG = "FREQUENCY_AUDIO";
 audio_pipeline_handle_t pipeline;
-audio_element_handle_t fatfs_stream_writer, i2s_stream_reader, audio_encoder;
+audio_element_handle_t fatfs_stream_writer, i2s_stream_reader, audio_encoder, resample_filter, raw_reader;
 audio_event_iface_handle_t evt;
 esp_periph_set_handle_t set;
 audio_board_handle_t board_handle;
@@ -18,6 +23,10 @@ char *url = NULL;
 int player_volume = 80;
 int sample_rate = 16000;
 periph_service_handle_t input_ser;
+
+goertzel_filter_cfg_t filters_cfg[GOERTZEL_NR_FREQS]; // Configuration for Goertzel filters
+goertzel_filter_data_t filters_data[GOERTZEL_NR_FREQS]; 
+int16_t raw_buffer;
 
 const char *LCD_TAG = "LCD";
 bool sdcard_mounted = false;
@@ -141,6 +150,7 @@ void start_codec_chip()
 // Create and start input key service
 void create_input_key_service()
 {
+
     ESP_LOGW(SDCARD_TAG, "[ 3 ] Create and start input key service");
     input_key_service_info_t input_key_info[] = INPUT_KEY_DEFAULT_INFO();
     input_key_service_cfg_t input_cfg = INPUT_KEY_SERVICE_DEFAULT_CONFIG();
@@ -246,6 +256,62 @@ void create_recording_elements()
     ESP_LOGI(RECORDER_TAG, "[4.2] Listening event from peripherals");
     audio_event_iface_set_listener(esp_periph_set_get_event_iface(set), evt);
     ESP_LOGW(SDCARD_TAG, "RECORDER INIT FINISHED!");
+}
+
+void create_alt_recording_elements() {
+
+
+    ESP_LOGI(ALT_RECORDER_TAG, "Number of Goertzel detection filters is %d", GOERTZEL_NR_FREQS);
+
+    ESP_LOGI(ALT_RECORDER_TAG, "Create raw sample buffer");
+    raw_buffer = (int16_t *)malloc((GOERTZEL_BUFFER_LENGTH * sizeof(int16_t)));
+    if (raw_buffer == NULL)
+    {
+        ESP_LOGE(ALT_RECORDER_TAG, "Memory allocation for raw sample buffer failed");
+        return ESP_FAIL;
+    }
+
+    ESP_LOGI(ALT_RECORDER_TAG, "Setup Goertzel detection filters");
+    for (int f = 0; f < GOERTZEL_NR_FREQS; f++)
+    {
+        filters_cfg[f].sample_rate = GOERTZEL_SAMPLE_RATE_HZ;
+        filters_cfg[f].target_freq = GOERTZEL_DETECT_FREQS[f];
+        filters_cfg[f].buffer_length = GOERTZEL_BUFFER_LENGTH;
+        esp_err_t error = goertzel_filter_setup(&filters_data[f], &filters_cfg[f]);
+        ESP_ERROR_CHECK(error);
+    }
+
+    ESP_LOGI(ALT_RECORDER_TAG, "Create audio elements for pipeline");
+    i2s_stream_cfg_t i2s_cfg = I2S_STREAM_CFG_DEFAULT();
+    i2s_cfg.type = AUDIO_STREAM_READER;
+    i2s_cfg.i2s_config.sample_rate = sample_rate;
+    i2s_stream_reader = i2s_stream_init(&i2s_cfg);
+
+    rsp_filter_cfg_t rsp_cfg = DEFAULT_RESAMPLE_FILTER_CONFIG();
+    rsp_cfg.src_rate = 8000;
+    rsp_cfg.src_ch = 2;
+    rsp_cfg.dest_rate = GOERTZEL_SAMPLE_RATE_HZ;
+    rsp_cfg.dest_ch = 1;
+    resample_filter = rsp_filter_init(&rsp_cfg);
+
+
+    raw_stream_cfg_t raw_cfg = {
+        .out_rb_size = 8 * 1024,
+        .type = AUDIO_STREAM_READER,
+    };
+    raw_reader = raw_stream_init(&raw_cfg);
+    
+    
+
+    ESP_LOGI(ALT_RECORDER_TAG, "Register audio elements to pipeline");
+    audio_pipeline_register(pipeline, i2s_stream_reader, "i2s");
+    audio_pipeline_register(pipeline, resample_filter, "rsp_filter");
+    audio_pipeline_register(pipeline, raw_reader, "raw");
+
+    ESP_LOGI(ALT_RECORDER_TAG, "Link audio elements together to make pipeline ready");
+    const char *link_tag[3] = {"i2s", "rsp_filter", "raw"};
+    audio_pipeline_link(pipeline, &link_tag[0], 3);
+
 }
 
 // Set up event listener for pipeline events

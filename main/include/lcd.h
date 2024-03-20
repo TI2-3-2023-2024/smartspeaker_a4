@@ -126,3 +126,14 @@ void vol_up_handle();
 void vol_down_handle();
 void mode_handle();
 void rec_handle();
+
+
+typedef struct
+{
+    char firstBar;
+    char secondBar;
+} VolumeMeter;
+
+void display_percentage(int y, int percentage);
+void displayVolume(VolumeMeter *v, int y);
+void updateVolume(VolumeMeter* volume, char value);
