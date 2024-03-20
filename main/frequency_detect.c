@@ -305,7 +305,7 @@ void stop_goertzel_detection()
 
     if (raw_buffer == NULL)
     {
-        ESP_LOGE(TAG, "RAW_BUFFER IS NULL");
+        ESP_LOGI(TAG, "Goertzel raw buffer is NULL");
         return;
     }
 

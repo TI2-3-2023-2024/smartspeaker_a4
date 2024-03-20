@@ -252,20 +252,8 @@ esp_err_t lcd_touchpad_handle(periph_service_event_t *evt, void *ctx)
 TaskHandle_t radio_task_handle = NULL; // Variable to hold the task handle
 void rec_handle()
 {
-    setupCustomChars();
-    if (frequencyTaskHandle != NULL)
-    {
-        vTaskDelay(250 / portTICK_RATE_MS);
-        ESP_LOGE("A", "STOPPING FREQUENCY TASK!");
-        stop_goertzel_detection();
-        // vTaskDelete(frequencyTaskHandle);
-        // vTaskDelay(250 / portTICK_RATE_MS);
-        ESP_LOGE("A", "STOPPED FREQUENCY TASK!");
-        // frequencyTaskHandle = NULL;
-    }
+    // setupCustomChars();
     stop_goertzel_detection();
-    
-    vTaskDelay(500 / portTICK_RATE_MS);
 
     audio_mode_toggle = false;
 
